@@ -1,0 +1,28 @@
+name: Migrate prod database
+
+# Applies new Supabase migrations to the prod project after a merge to main.
+# Vercel deploys at the same time, so migrations must work with the code
+# that's already live (see CLAUDE.md).
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: migrate-prod
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_PROD_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+      - run: supabase link --project-ref "${{ secrets.SUPABASE_PROD_PROJECT_REF }}"
+      - run: supabase db push --yes
