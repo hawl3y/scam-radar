@@ -22,6 +22,15 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
     return { errors: { form: ["Your session ended. Please sign in again."] } };
   }
 
+  const { data: known } = await supabase
+    .from("zip_centroids")
+    .select("zip")
+    .eq("zip", parsed.data.homeZip)
+    .maybeSingle();
+  if (!known) {
+    return { errors: { homeZip: ["We don't recognize that zip code. Please check it."] } };
+  }
+
   const { error } = await supabase
     .from("profiles")
     .update({ home_zip: parsed.data.homeZip, radius_miles: parsed.data.radiusMiles })
