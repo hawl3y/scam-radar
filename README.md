@@ -65,10 +65,10 @@ supabase link --project-ref <dev-project-ref>
 ### Auth settings (do this in each project's dashboard)
 - **Authentication → Sign In / Providers → Email:** enabled. Leave "Confirm email" on.
 - **Authentication → URL Configuration:**
-  - Site URL: `http://localhost:3000` (dev) or the production URL (prod).
+  - Site URL: `http://localhost:3000` (dev) or `https://scam-radar.joechawley.com` (prod).
   - Redirect URLs:
-    - dev: `http://localhost:3000/**` and `https://*-<vercel-team-slug>.vercel.app/**` (preview deploys)
-    - prod: `https://<production-domain>/**`
+    - dev: `http://localhost:3000/**` and `https://scam-radar-*-hawleys-projects.vercel.app/**` (preview deploys)
+    - prod: `https://scam-radar.joechawley.com/**`
 - **Authentication → Emails → SMTP Settings:** custom SMTP via [Resend](https://resend.com).
   - Host `smtp.resend.com`, port `465`, username `resend`, password: a Resend API key.
   - Sender: `no-reply@scam-radar.joechawley.com` (domain verified in Resend).
@@ -82,4 +82,5 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 - Environment variables (Project Settings → Environment Variables):
   - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
   - **Preview** and **Development:** the dev project's values
-- Every branch push gets a preview deploy; `main` deploys to production.
+- Every branch push gets a preview deploy; `main` deploys to production at https://scam-radar.joechawley.com (DNS: CNAME at DreamHost).
+- Preview deploys are behind Vercel Authentication (Deployment Protection). Sign in to Vercel to view them, including on a phone.
