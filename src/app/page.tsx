@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ClusterCard } from "@/components/cluster-card";
+import { FeedList } from "@/components/feed-list";
 import { ZipForm } from "@/components/zip-form";
 import { getNearbyClusters } from "@/lib/clusters";
 import { getViewer } from "@/lib/viewer";
@@ -84,16 +84,13 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
           neighbors.
         </p>
       ) : (
-        <ul className="space-y-4">
-          {clusters.map((cluster) => (
-            <ClusterCard
-              key={cluster.cluster_id}
-              cluster={cluster}
-              viewerZip={viewer.zip}
-              href={`/alerts/${cluster.cluster_id}${query}`}
-            />
-          ))}
-        </ul>
+        <FeedList
+          clusters={clusters}
+          viewerZip={viewer.zip}
+          query={query}
+          signedIn={viewer.signedIn}
+          serverLastVisit={viewer.lastFeedVisit}
+        />
       )}
     </div>
   );
