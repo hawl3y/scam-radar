@@ -29,11 +29,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${atkinson.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
         <header className="border-b border-border">
-          <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+          <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-x-4 px-4 py-3">
             <Link href="/" className="text-xl font-bold">
               {SITE_NAME}
             </Link>
-            <nav className="flex gap-4">
+            <nav className="flex flex-wrap gap-x-4">
+              <Link href="/check" className="inline-flex min-h-12 items-center underline">
+                Check
+              </Link>
               <Link href="/report" className="inline-flex min-h-12 items-center underline">
                 Report
               </Link>
