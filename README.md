@@ -24,7 +24,7 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS, Supabase (Postgres + P
    ```sh
    cp .env.example .env.local
    ```
-   Fill in the **dev** project's URL, publishable key, and secret key (Supabase Dashboard → Project Settings → API Keys).
+   Fill in the **dev** project's URL, publishable key, and secret key (Supabase Dashboard → Project Settings → API Keys), and set `RATE_LIMIT_SALT` to a random string (`openssl rand -hex 32`).
 5. **Database:** link the dev project and apply migrations:
    ```sh
    supabase link --project-ref <dev-project-ref>
@@ -51,6 +51,9 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS, Supabase (Postgres + P
 Two hosted projects: `scam-radar-dev` and `scam-radar-prod`. No local Docker database.
 
 Zip code centers (`zip_centroids`) come from the US Census Bureau [Gazetteer files](https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html) (2025 ZCTA, public domain) and are loaded by a migration.
+
+### Matching (clusters and Check)
+Text similarity uses Postgres `pg_trgm` behind database functions (`nearest_cluster_candidate`, `match_clusters`). Thresholds live in `src/lib/matching.ts`. To re-tune them, run `node scripts/calibrate-matching.mts` (read-only, uses the linked dev project) and update the numbers and the comment there.
 
 Don't use `supabase migration new` from a script or agent; it waits for SQL on stdin. Create `supabase/migrations/<YYYYMMDDHHMMSS>_<name>.sql` by hand instead.
 
@@ -82,9 +85,9 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 
 - Import the GitHub repo in Vercel (framework: Next.js; defaults are fine).
 - Environment variables (Project Settings → Environment Variables):
-  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`
-  - **Preview:** the dev project's values
-  - Mark `SUPABASE_SECRET_KEY` as **Sensitive**.
+  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`, plus a `RATE_LIMIT_SALT`
+  - **Preview:** the dev project's values, plus a different `RATE_LIMIT_SALT`
+  - Mark `SUPABASE_SECRET_KEY` and `RATE_LIMIT_SALT` as **Sensitive**.
 - Every branch push gets a preview deploy; `main` deploys to production at https://scam-radar.joechawley.com (DNS: CNAME at DreamHost).
 - Preview deploys are behind Vercel Authentication (Deployment Protection). Sign in to Vercel to view them, including on a phone.
 
