@@ -97,9 +97,7 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 
 ### One-time GitHub setup
 - **Settings → Secrets and variables → Actions → New repository secret:**
-  - `SUPABASE_ACCESS_TOKEN`: from https://supabase.com/dashboard/account/tokens
-  - `SUPABASE_PROD_PROJECT_REF`: the prod project ref
-  - `SUPABASE_PROD_DB_PASSWORD`: the prod database password
+  - `SUPABASE_PROD_DB_URL`: prod project → **Connect** → **Session pooler** connection string (port `5432`), with `[YOUR-PASSWORD]` replaced by the prod database password. Percent-encode special characters in the password (e.g. `@` → `%40`, `#` → `%23`, `/` → `%2F`). Don't use the direct connection string; GitHub runners can't reach it (IPv6 only).
 - **Settings → General → Pull Requests:** turn on **Automatically delete head branches**.
 - **Settings → Rules → Rulesets → New branch ruleset** for `main`:
   - Require a pull request before merging.
