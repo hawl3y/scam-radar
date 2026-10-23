@@ -33,13 +33,12 @@ async function Settings({ searchParams }: Pick<PageProps<"/settings">, "searchPa
 
   return (
     <>
-      {welcome && (
-        <p className="rounded-md border-2 border-accent p-4">
-          Welcome! Tell us roughly where you are so we can show scams reported near you.
-        </p>
-      )}
       <p className="text-muted">Signed in as {String(auth.claims.email ?? "")}</p>
-      <SettingsForm homeZip={profile?.home_zip ?? ""} radiusMiles={radius} />
+      <SettingsForm
+        homeZip={profile?.home_zip ?? ""}
+        radiusMiles={radius}
+        welcome={Boolean(welcome)}
+      />
       <form action="/auth/signout" method="post">
         <button type="submit" className="min-h-12 underline">
           Sign out
