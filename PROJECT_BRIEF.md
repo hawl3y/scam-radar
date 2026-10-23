@@ -83,7 +83,7 @@ A mobile-friendly web app (PWA) that acts as a **local scam radar**. Residents r
 
 **Environments:** separate Supabase projects for dev and prod. Secrets in Vercel environment variables and a local `.env.local` (never committed).
 
-**Dev setup:** owner works on a MacBook Pro (VS Code + Claude Code) and sometimes on an Ubuntu server over SSH. Keep setup reproducible: document every step in `README.md`, pin Node version (`.nvmrc`), use the Supabase CLI for migrations.
+**Dev setup:** owner works on a MacBook Pro (VS Code + Claude Code). Keep setup reproducible: document every step in `README.md`, pin Node version (`.nvmrc`), use the Supabase CLI for migrations.
 
 ## 7. Data model (starting sketch — refine in Phase 0/1)
 
