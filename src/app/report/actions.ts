@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { assignCluster } from "@/lib/clusters";
 import { redact, type RedactionKind } from "@/lib/redaction";
 import { reportDraftSchema, type ReportDraft } from "@/lib/report-schema";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -97,7 +98,15 @@ async function post(formData: FormData): Promise<ReportState> {
     return { step: "preview", version: Date.now(), draft: parsed.data, found: {}, errors: { form: ["We couldn't post your report. Please try again."] } };
   }
 
-  redirect(`/reports/${data.id}?posted=1`);
+  let clusterId: string | null = null;
+  try {
+    clusterId = await assignCluster(data.id);
+  } catch (e) {
+    // The report is saved; don't show the form again (it would invite a duplicate).
+    console.error("cluster assignment failed", e);
+  }
+
+  redirect(clusterId ? `/alerts/${clusterId}?posted=1` : "/");
 }
 
 export async function reportAction(prev: ReportState, formData: FormData): Promise<ReportState> {

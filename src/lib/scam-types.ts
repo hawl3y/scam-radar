@@ -111,3 +111,12 @@ export type ScamType = keyof typeof SCAM_TYPES;
 
 export const CHANNEL_KEYS = Object.keys(CHANNELS) as [Channel, ...Channel[]];
 export const SCAM_TYPE_KEYS = Object.keys(SCAM_TYPES) as [ScamType, ...ScamType[]];
+
+/** Shown by Check when nothing similar was reported nearby. */
+export const GENERAL_WARNING_SIGNS = [
+  "It's unexpected and urgent: act now, or something bad happens.",
+  "It asks for payment by gift card, wire transfer, payment app, or cryptocurrency.",
+  "It asks for a password, PIN, Social Security number, or a code sent to your phone.",
+  "It has a link or number to call that you didn't look up yourself.",
+  "It asks you to keep it secret or not tell your family or bank.",
+];

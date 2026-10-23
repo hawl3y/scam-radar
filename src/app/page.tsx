@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ReportCard } from "@/components/report-card";
+import { ClusterCard } from "@/components/cluster-card";
 import { ZipForm } from "@/components/zip-form";
-import { getNearbyReports, getViewer } from "@/lib/reports";
+import { getNearbyClusters } from "@/lib/clusters";
+import { getViewer } from "@/lib/viewer";
 import { SITE_DESCRIPTION } from "@/lib/site";
 
 export default function Home({ searchParams }: PageProps<"/">) {
@@ -10,12 +11,20 @@ export default function Home({ searchParams }: PageProps<"/">) {
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">Scams near you</h1>
-        <Link
-          href="/report"
-          className="inline-flex min-h-12 items-center rounded-md bg-accent px-5 text-lg font-bold text-accent-foreground"
-        >
-          Report a scam
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/check"
+            className="inline-flex min-h-12 items-center rounded-md border-2 border-accent px-5 text-lg font-bold"
+          >
+            Check a message
+          </Link>
+          <Link
+            href="/report"
+            className="inline-flex min-h-12 items-center rounded-md bg-accent px-5 text-lg font-bold text-accent-foreground"
+          >
+            Report a scam
+          </Link>
+        </div>
       </div>
       <Suspense fallback={<p>Loading reports…</p>}>
         <Feed searchParams={searchParams} />
@@ -58,7 +67,7 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
     );
   }
 
-  const reports = await getNearbyReports(viewer.zip, viewer.radiusMiles);
+  const clusters = await getNearbyClusters(viewer.zip, viewer.radiusMiles);
   const query = viewer.signedIn ? "" : `?zip=${viewer.zip}`;
 
   return (
@@ -69,15 +78,20 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
           Change
         </Link>
       </p>
-      {reports.length === 0 ? (
+      {clusters.length === 0 ? (
         <p className="rounded-md border-2 border-border p-4">
           No scams reported near you yet. If you get a suspicious message, call, or visit, report it to warn your
           neighbors.
         </p>
       ) : (
         <ul className="space-y-4">
-          {reports.map((report) => (
-            <ReportCard key={report.id} report={report} viewerZip={viewer.zip} href={`/reports/${report.id}${query}`} />
+          {clusters.map((cluster) => (
+            <ClusterCard
+              key={cluster.cluster_id}
+              cluster={cluster}
+              viewerZip={viewer.zip}
+              href={`/alerts/${cluster.cluster_id}${query}`}
+            />
           ))}
         </ul>
       )}
