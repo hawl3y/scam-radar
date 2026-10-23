@@ -1,17 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_RADIUS } from "@/lib/profile-schema";
-import type { Channel, ScamType } from "@/lib/scam-types";
-
-export type PublicReport = {
-  id: string;
-  scam_type: ScamType;
-  channel: Channel;
-  description_redacted: string;
-  zip: string;
-  created_at: string;
-  distance_miles: number | null;
-};
 
 export type Viewer =
   | { kind: "located"; zip: string; radiusMiles: number; signedIn: boolean }
@@ -36,18 +25,4 @@ export async function getViewer(zipParam: string | string[] | undefined): Promis
   const { data } = await supabase.from("zip_centroids").select("zip").eq("zip", zip).maybeSingle();
   if (!data) return { kind: "needs-zip", signedIn: false, unknownZip: zip };
   return { kind: "located", zip, radiusMiles: DEFAULT_RADIUS, signedIn: false };
-}
-
-export async function getNearbyReports(zip: string, radiusMiles: number): Promise<PublicReport[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("nearby_reports", { origin_zip: zip, radius_miles: radiusMiles });
-  if (error) throw new Error(`nearby_reports failed: ${error.message}`);
-  return data as PublicReport[];
-}
-
-export async function getReport(id: string, originZip: string | null): Promise<PublicReport | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_report", { report_id: id, origin_zip: originZip });
-  if (error) throw new Error(`get_report failed: ${error.message}`);
-  return (data as PublicReport[])[0] ?? null;
 }
