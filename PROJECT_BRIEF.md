@@ -76,7 +76,7 @@ A mobile-friendly web app (PWA) that acts as a **local scam radar**. Residents r
 | Email | Resend or Postmark | Decide in Phase 3 |
 | Web push | Web Push API with VAPID keys | Optional channel |
 | Scheduled jobs | Vercel Cron | Digests, public data ingestion |
-| AI | LLM API + embeddings | Only for redaction, matching, clustering, plain-English "Check" summaries |
+| Matching | Postgres `pg_trgm` text similarity | Clustering and "Check" matching. No AI in the MVP so far; see §11 |
 | Styling | Tailwind CSS | Mobile-first |
 
 **Language policy:** TypeScript everywhere for the MVP. Python may be added later only for a clear need (e.g., data ingestion); don't introduce it without asking.
@@ -123,8 +123,8 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - **Done when:** a user reports a scam and a second test user within the radius sees it, redacted, with correct distance.
 
 ### Phase 2 — Check and corroborate
-- Embeddings on reports; similarity search.
-- "Check": paste text, return matching local reports and a short plain-English read. Never claim certainty.
+- Text similarity on reports with Postgres `pg_trgm` (no AI). Matching sits behind database functions so embeddings can replace it later (§11).
+- "Check": paste text, return matching local clusters with fixed plain-English guidance and tips. Never claim certainty. Per-IP rate limit.
 - Clustering: new reports join an existing cluster when similar enough.
 - "I got this too" with counts on cards.
 - **Done when:** a pasted message finds the matching cluster, and corroboration counts update correctly.
@@ -181,3 +181,7 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - Location granularity (grid size vs. zip centroid)
 - BBB / FTC data access terms
 - Reputation formula details
+
+## 11. Future options
+
+- **AI redaction, embeddings, and generated "Check" answers**, if `pg_trgm` matching proves weak (e.g. paraphrased reports of the same scam don't cluster, or Check misses obvious matches). Only rules-redacted text would be sent to an AI provider.
