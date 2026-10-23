@@ -10,6 +10,10 @@ const buttonClass =
 
 const initialState: LoginState = { step: "email" };
 
+// Supabase's default emails have a link but no code. Turn this on in Phase 3,
+// when custom SMTP lets us use supabase/templates/sign-in.html ({{ .Token }}).
+const SIGN_IN_CODE_ENABLED = false;
+
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(login, initialState);
 
@@ -29,7 +33,24 @@ export function LoginForm({ next }: { next: string }) {
         <button type="submit" disabled={pending} className={buttonClass}>
           {pending ? "Sending…" : "Email me a sign-in link"}
         </button>
-        <p className="text-muted">No password needed. We&apos;ll email you a link and a code.</p>
+        <p className="text-muted">
+          No password needed. We&apos;ll email you a sign-in link
+          {SIGN_IN_CODE_ENABLED && " and a code"}.
+        </p>
+      </form>
+    );
+  }
+
+  if (!SIGN_IN_CODE_ENABLED) {
+    return (
+      <form action={action} className="space-y-4">
+        <p role="status" className="text-lg">
+          We sent an email to <strong>{state.email}</strong>. Open the link in it on this device,
+          in this same browser.
+        </p>
+        <button type="submit" name="intent" value="restart" disabled={pending} className="min-h-12 underline">
+          Use a different email
+        </button>
       </form>
     );
   }
