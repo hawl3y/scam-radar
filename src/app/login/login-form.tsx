@@ -10,9 +10,9 @@ const buttonClass =
 
 const initialState: LoginState = { step: "email" };
 
-// Supabase's default emails have a link but no code. Turn this on in Phase 3,
-// when custom SMTP lets us use supabase/templates/sign-in.html ({{ .Token }}).
-const SIGN_IN_CODE_ENABLED = false;
+// Requires the custom email template (supabase/templates/sign-in.html), which
+// includes {{ .Token }}. Supabase's default emails have a link but no code.
+const SIGN_IN_CODE_ENABLED = true;
 
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(login, initialState);

@@ -4,11 +4,11 @@ import { postLoginPath } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 // Sign-in link landing. Two shapes are supported:
-// - ?code=… : Supabase's default email ({{ .ConfirmationURL }}) verifies the
-//   link, then redirects here with a PKCE code. Exchanging it needs the code
-//   verifier cookie, so the link must open in the browser that requested it.
-// - ?token_hash=…&type=… : our custom template (Phase 3, needs custom SMTP).
+// - ?token_hash=…&type=… : our custom template (supabase/templates/sign-in.html).
 //   Works in any browser.
+// - ?code=… : Supabase's default email ({{ .ConfirmationURL }}), used if the
+//   custom template isn't installed. Needs the PKCE code verifier cookie, so
+//   the link must open in the browser that requested it.
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");

@@ -69,11 +69,12 @@ supabase link --project-ref <dev-project-ref>
   - Redirect URLs:
     - dev: `http://localhost:3000/**` and `https://*-<vercel-team-slug>.vercel.app/**` (preview deploys)
     - prod: `https://<production-domain>/**`
-- **Emails:** use Supabase's default templates for now (editing them requires custom SMTP). The link returns to `/auth/confirm?code=…`, which only works in the same browser that requested it. On iPhone that means Safari, not the home-screen app.
+- **Authentication → Emails → SMTP Settings:** custom SMTP via [Resend](https://resend.com).
+  - Host `smtp.resend.com`, port `465`, username `resend`, password: a Resend API key.
+  - Sender: `no-reply@scam-radar.joechawley.com` (domain verified in Resend).
+- **Authentication → Emails → Templates:** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup** (subject: `Your Scam Radar sign-in link`). Custom templates require custom SMTP.
 
-Supabase's built-in email sender is limited to a few emails per hour. That's fine for testing.
-
-**Phase 3 (custom SMTP):** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup**, then set `SIGN_IN_CODE_ENABLED = true` in `src/app/login/login-form.tsx`. That adds a cross-browser link and a sign-in code for home-screen users.
+The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) and a sign-in code. The code is for people using the app from their iPhone home screen, which doesn't share sign-ins with Safari. The code entry is controlled by `SIGN_IN_CODE_ENABLED` in `src/app/login/login-form.tsx`; it must stay in sync with the template.
 
 ## Deploys (Vercel)
 
