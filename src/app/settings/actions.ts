@@ -10,6 +10,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
   const parsed = profileSettingsSchema.safeParse({
     homeZip: formData.get("homeZip"),
     radiusMiles: formData.get("radiusMiles"),
+    alertMode: formData.get("alertMode"),
   });
   if (!parsed.success) {
     return { errors: z.flattenError(parsed.error).fieldErrors };
@@ -33,7 +34,11 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
 
   const { error } = await supabase
     .from("profiles")
-    .update({ home_zip: parsed.data.homeZip, radius_miles: parsed.data.radiusMiles })
+    .update({
+      home_zip: parsed.data.homeZip,
+      radius_miles: parsed.data.radiusMiles,
+      alert_mode: parsed.data.alertMode,
+    })
     .eq("id", userId);
   if (error) {
     console.error("profile update failed", error.message);
