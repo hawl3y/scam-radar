@@ -56,11 +56,9 @@ Only through migrations:
 supabase migration new <name>      # creates supabase/migrations/<timestamp>_<name>.sql
 supabase db push                   # applies to the currently linked project
 ```
-To apply to prod, link prod, push, then link dev again:
-```sh
-supabase link --project-ref <prod-project-ref> && supabase db push
-supabase link --project-ref <dev-project-ref>
-```
+Keep the CLI linked to **dev**. Prod gets migrations automatically from the `Migrate prod database` workflow when they merge to `main`. Never push to prod by hand.
+
+Migrations must work with the code already in production (add columns/tables; rename or drop only in a later change), because the prod migration and the Vercel production deploy run at the same time.
 
 ### Auth settings (do this in each project's dashboard)
 - **Authentication → Sign In / Providers → Email:** enabled. Leave "Confirm email" on.
@@ -84,3 +82,26 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
   - **Preview** and **Development:** the dev project's values
 - Every branch push gets a preview deploy; `main` deploys to production at https://scam-radar.joechawley.com (DNS: CNAME at DreamHost).
 - Preview deploys are behind Vercel Authentication (Deployment Protection). Sign in to Vercel to view them, including on a phone.
+
+## Making changes
+
+1. Branch from `main`: `git checkout -b <feature>`.
+2. If the change includes a migration, apply it to dev: `supabase db push` (CLI linked to dev).
+3. Push the branch and open a pull request. This runs:
+   - **CI** (GitHub Actions): lint, typecheck, unit tests.
+   - **Vercel preview** using the dev database.
+4. Test on the preview. When CI is green, merge the PR.
+5. Merging to `main`:
+   - Vercel deploys production.
+   - If `supabase/migrations/` changed, the **Migrate prod database** workflow applies them to prod. Check it passed under the repo's **Actions** tab.
+
+### One-time GitHub setup
+- **Settings → Secrets and variables → Actions → New repository secret:**
+  - `SUPABASE_ACCESS_TOKEN`: from https://supabase.com/dashboard/account/tokens
+  - `SUPABASE_PROD_PROJECT_REF`: the prod project ref
+  - `SUPABASE_PROD_DB_PASSWORD`: the prod database password
+- **Settings → General → Pull Requests:** turn on **Automatically delete head branches**.
+- **Settings → Rules → Rulesets → New branch ruleset** for `main`:
+  - Require a pull request before merging.
+  - Require status checks to pass: `checks`.
+  - Block force pushes.
