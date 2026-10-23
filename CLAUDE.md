@@ -14,8 +14,9 @@
 - Small, focused commits on a feature branch; the owner merges to `main` after checking the Vercel preview.
 - Keep `README.md` setup steps current whenever setup changes.
 - When something in the brief is unclear or conflicts with best practice, ask instead of guessing.
+- Keep responses brief: only what's needed.
 
 ## Environment
-- Owner develops on macOS (VS Code + Claude Code) and sometimes on an Ubuntu server over SSH. Keep setup reproducible on both.
+- Owner develops on macOS (VS Code + Claude Code). Keep setup reproducible and documented in `README.md`.
 - GitHub: https://github.com/hawl3y/scam-radar
 - Hosting: Vercel (connected after Phase 0 scaffolding).

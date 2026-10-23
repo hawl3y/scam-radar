@@ -22,3 +22,9 @@ supabase/.branches/
 # OS / editor
 .DS_Store
 *.log
+
+# testing / typescript
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+*.pem
