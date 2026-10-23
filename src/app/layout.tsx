@@ -34,6 +34,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               {SITE_NAME}
             </Link>
             <nav className="flex gap-4">
+              <Link href="/report" className="inline-flex min-h-12 items-center underline">
+                Report
+              </Link>
               <Link href="/settings" className="inline-flex min-h-12 items-center underline">
                 Settings
               </Link>
