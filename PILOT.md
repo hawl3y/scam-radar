@@ -1,6 +1,6 @@
 # ByeBell pilot
 
-The app is **ByeBell** ("Ring the bell on scams"; formerly the working title Scam Radar). It's moving from scam-radar.joechawley.com to **byebell.com**; follow the rename checklist below, then reprint flyers.
+The app is **ByeBell** ("Ring the bell on scams"; formerly the working title Scam Radar), live at **https://byebell.com**. The old scam-radar.joechawley.com redirects to it. Reprint flyers from `/flyer` (the QR code now points to byebell.com).
 
 Status: Phases 0–6 are merged and live. Work through the launch checklist and open follow-ups, then start recruiting.
 
@@ -64,7 +64,7 @@ After 4–8 weeks, decide: **continue** (most targets met), **adjust** (some met
 
 ## Rename / new domain checklist
 
-**In progress: ByeBell at byebell.com.** The name is done in code (display name, logo, icons). The domain steps below are next.
+**Done (Oct 2026): ByeBell at byebell.com.** Code (`site.ts`, ingest workflow), DNS (Vercel A/CNAME; Resend DKIM/`send`; DMARC), Vercel (byebell.com primary; www and scam-radar.joechawley.com 308-redirect), Resend (byebell.com verified, new keys), Supabase prod (Site URL, redirect URLs, SMTP sender `no-reply@byebell.com`, templates), and support@byebell.com (DreamHost forward) are all switched. `EMAIL_TOKEN_SECRET` was kept so links in past emails still work. Remaining: keep scam-radar.joechawley.com attached in Vercel and in Supabase's redirect URLs for at least a year; optionally switch the dev Supabase project's SMTP sender; reprint flyers.
 
 Use this for any future rename or domain change too. Keep the old domain working during the switch: printed flyers, emailed alert links, and unsubscribe links all point to it.
 

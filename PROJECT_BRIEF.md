@@ -1,6 +1,6 @@
 # ByeBell — Project Brief (MVP)
 
-> **Status (Oct 2026):** Phases 0–6 are built, merged, and live. The app is now **ByeBell** ("Ring the bell on scams"; formerly the working title Scam Radar) and is moving from scam-radar.joechawley.com to **byebell.com** (see `PILOT.md` → Rename / new domain checklist). The pilot is starting. Decisions made during the build are in §10.
+> **Status (Oct 2026):** Phases 0–6 are built, merged, and live at **https://byebell.com**. The app is **ByeBell** ("Ring the bell on scams"; formerly the working title Scam Radar). The pilot is starting; see `PILOT.md`. Decisions made during the build are in §10.
 >
 > This brief is the source of truth for the MVP. Read it fully before planning or writing code. When a decision here conflicts with a default you'd otherwise choose, follow this brief and flag the conflict.
 
@@ -192,7 +192,7 @@ Settled during the build (the former open questions plus later decisions). Chang
 
 | Topic | Decision |
 |---|---|
-| Name and domain | **ByeBell** (tagline "Ring the bell on scams"), official. Production domain **byebell.com** (registered at DreamHost); scam-radar.joechawley.com redirects to it after the switch. The repo, Supabase/Vercel project names, and internal identifiers keep "scam-radar". |
+| Name and domain | **ByeBell** (tagline "Ring the bell on scams"), official. Production domain **byebell.com** (registered at DreamHost); www and the old scam-radar.joechawley.com 308-redirect to it. The repo, Supabase/Vercel project names, and internal identifiers keep "scam-radar". |
 | Matching | Postgres `pg_trgm` text similarity, **no AI**. Join a cluster at score ≥ 0.45; Check shows matches at ≥ 0.32 (calibrated with `scripts/calibrate-matching.mts`). Clustering ignores scam type; 50-mile, 90-day window. |
 | Redaction | Rules only. The reporter sees and edits a redacted preview before posting; the server redacts again on post. Links are kept but always shown defanged and never clickable. |
 | Location | Zip code centers only (US Census ZCTA). Default radius 10 miles (choices 5, 10, 25). |
@@ -204,7 +204,7 @@ Settled during the build (the former open questions plus later decisions). Chang
 | Flags | Auto-hide a report at 3 flags from accounts in good standing, pending admin review. Ratings are private. |
 | Rate limits | Report 5/hour and 20/day; "I got this too" 30/hour; ratings 60/hour; flags 20/hour; Check 20/hour per IP. |
 | Public data | FTC Do Not Call API (stored as daily counts only; no phone numbers or cities) and FBI IC3 RSS. Markets (rows in `markets`, seeded NY 845 and NJ Bergen 201/551) match zips in the **same state** within their radius. Every other state gets state-level trends (read newest-first, 3 days deep daily; no backfill). Labels name the state and area codes and never claim town-level precision; complaints without a state are excluded. The API's burst throttle allows ~100 requests per run, so ingest runs every 15 minutes on weekday afternoons via GitHub Actions (free for this public repo), skipping work already done; Vercel Cron at 18:00 UTC is the backup. |
-| Legal | Terms (18+), privacy policy, and community rules drafted; contact `support@joechawley.com`. Lawyer review pending before wide launch. |
+| Legal | Terms (18+), privacy policy, and community rules drafted; contact `support@byebell.com`. Lawyer review pending before wide launch. |
 | Pilot metrics | First-party only: aggregate daily counts and signed-in activity days. No analytics providers, tracking cookies, or email open tracking. |
 | Pilot success criteria | 50+ sign-ups in the test area; 5+ reports/week by week 4; 30%+ alerts corroborated; 40%+ users returning in a later week; under 10% turning off emails. |
 

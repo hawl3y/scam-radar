@@ -70,14 +70,14 @@ Migrations must work with the code already in production (add columns/tables; re
 ### Auth settings (do this in each project's dashboard)
 - **Authentication → Sign In / Providers → Email:** enabled. Leave "Confirm email" on.
 - **Authentication → URL Configuration:**
-  - Site URL: `http://localhost:3000` (dev) or `https://scam-radar.joechawley.com` (prod).
+  - Site URL: `http://localhost:3000` (dev) or `https://byebell.com` (prod).
   - Redirect URLs:
     - dev: `http://localhost:3000/**` and `https://scam-radar-*-hawleys-projects.vercel.app/**` (preview deploys)
-    - prod: `https://scam-radar.joechawley.com/**`
+    - prod: `https://byebell.com/**` (keep `https://scam-radar.joechawley.com/**` while the old domain redirects)
 - **Authentication → Emails → SMTP Settings:** custom SMTP via [Resend](https://resend.com).
   - Host `smtp.resend.com`, port `465`, username `resend`, password: a Resend API key.
-  - Sender: `no-reply@scam-radar.joechawley.com` (domain verified in Resend).
-- **Authentication → Emails → Templates:** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup** (subject: `Your Scam Radar sign-in link`). Custom templates require custom SMTP.
+  - Sender: `no-reply@byebell.com`, name `ByeBell` (domain verified in Resend). Password: a Resend key with sending access for byebell.com.
+- **Authentication → Emails → Templates:** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup** (subject: `Your ByeBell sign-in link`). Custom templates require custom SMTP.
 
 The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) and a sign-in code. The code is for people using the app from their iPhone home screen, which doesn't share sign-ins with Safari. The code entry is controlled by `SIGN_IN_CODE_ENABLED` in `src/app/login/login-form.tsx`; it must stay in sync with the template.
 
@@ -85,15 +85,15 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 
 - Import the GitHub repo in Vercel (framework: Next.js; defaults are fine).
 - Environment variables (Project Settings → Environment Variables):
-  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`; `NEXT_PUBLIC_SITE_URL=https://scam-radar.joechawley.com`; plus its own `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`, and `FTC_API_KEY`
+  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`; `NEXT_PUBLIC_SITE_URL=https://byebell.com`; plus its own `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`, and `FTC_API_KEY`
   - **Preview:** the dev project's values; `NEXT_PUBLIC_SITE_URL=https://scam-radar-git-<branch>-hawleys-projects.vercel.app` is fine for testing (links in preview emails need Vercel sign-in); different random secrets
   - Mark every secret (`SUPABASE_SECRET_KEY`, `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`, `FTC_API_KEY`) as **Sensitive**.
-- Every branch push gets a preview deploy; `main` deploys to production at https://scam-radar.joechawley.com (DNS: CNAME at DreamHost).
+- Every branch push gets a preview deploy; `main` deploys to production at **https://byebell.com** (DNS at DreamHost: A record for the apex, CNAME for `www`). `www.byebell.com` and the old **scam-radar.joechawley.com** 308-redirect to byebell.com; keep the old domain attached in Vercel for at least a year (old emails and flyers link to it).
 - Preview deploys are behind Vercel Authentication (Deployment Protection). Sign in to Vercel to view them, including on a phone.
 
 ## Alerts (email)
 
-- **Sending:** [Resend](https://resend.com) API, from `alerts@scam-radar.joechawley.com`. Create an API key with **Sending access** for the domain; use separate keys for Preview and Production. SPF and DKIM come from the Resend domain verification; DMARC is a TXT record at DreamHost (`_dmarc.scam-radar`, `v=DMARC1; p=none;`).
+- **Sending:** [Resend](https://resend.com) API, from `alerts@byebell.com` (display name ByeBell). Create an API key with **Sending access** for byebell.com; use separate keys for Preview and Production. SPF and DKIM come from the Resend domain verification (`resend._domainkey`, `send`); DMARC is a TXT record at DreamHost (`_dmarc`, `v=DMARC1; p=none;`). Support mail: `support@byebell.com` (DreamHost, forward-only).
 - **Instant alerts:** sent right after a report or "I got this too" pushes a cluster to `ALERT_INSTANT_THRESHOLD` (default 3), to users in **instant** mode within their radius. Max 3 per person per day.
 - **Daily digest:** Vercel Cron calls `/api/cron/digest` at 12:00 UTC (8 am Eastern in summer, 7 am in winter). Crons only run on production. To run it on a preview:
   ```sh
