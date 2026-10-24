@@ -2,7 +2,7 @@
 
 ## Current status (Oct 2026)
 - **Phases 0–6 are complete and merged.** The app is live (Vercel + Supabase prod).
-- **The app is now ByeBell** (official; tagline "Ring the bell on scams"). The display name, logo (`src/components/logo.tsx`), and app icons are ByeBell. **Domain move in progress:** scam-radar.joechawley.com → **byebell.com**, following `PILOT.md` → Rename / new domain checklist. Until that's finished, URLs and sender addresses still use scam-radar.joechawley.com.
+- **The app is ByeBell** (official; tagline "Ring the bell on scams") at **https://byebell.com**. `www.byebell.com` and the old scam-radar.joechawley.com 308-redirect to it (keep the old domain for at least a year). Email: alerts@ and no-reply@byebell.com via Resend; support@byebell.com (DreamHost). Display name, logo (`src/components/logo.tsx`), and app icons are ByeBell.
 - **The pilot is starting.** Next steps, open follow-ups, the weekly routine, and the rename checklist are in `PILOT.md`.
 - **Unwanted-call trends (updated Oct 24, PRs #12–#14):** markets match only zips in the **same state** within their radius (zip states from the Census ZCTA file). Markets: **NY 845** and **NJ Bergen** (201/551). Every other state gets state-level trends; no data shows "No local trend data for your area yet". Labels name the state and area codes, never "near you".
 - **FTC ingest:** the API's burst throttle (~100 requests per run from Vercel, likely per IP) shapes everything. Requests are paced one at a time, markets first (days interleaved across area codes), then market states, then a daily rotation; a 429 stops the run and keeps completed days; repeat runs skip work done in the last 6 hours. **GitHub Actions** (`.github/workflows/ingest.yml`, secret `PROD_CRON_SECRET`) runs it every 15 minutes, 17:00–20:45 UTC, Mon–Fri; **Vercel Cron** at 18:00 UTC is the backup. Ingest emails admins only on real errors; a daily **coverage check** (digest cron, Tue–Sat) emails if a market area code or more than 12 states weren't fetched. Details: README → Unwanted-call trends.
@@ -29,4 +29,4 @@
 ## Environment
 - Owner develops on macOS (VS Code + Claude Code). Keep setup reproducible and documented in `README.md`.
 - GitHub: https://github.com/hawl3y/scam-radar
-- Hosting: Vercel. Previews (dev database) per branch; production (prod database) from `main` at https://scam-radar.joechawley.com.
+- Hosting: Vercel. Previews (dev database) per branch; production (prod database) from `main` at https://byebell.com.
