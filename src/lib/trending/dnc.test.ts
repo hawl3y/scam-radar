@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateDnc, bucketByDay, completeDays, daysToFetch, fromState, recordDay, shiftDate } from "./dnc";
+import { aggregateDnc, bucketByDay, completeDays, daysToFetch, fromState, isFresh, recordDay, shiftDate, statesNeedingFetch } from "./dnc";
 
 describe("aggregateDnc", () => {
   const records = [
@@ -87,5 +87,41 @@ describe("per-state stream helpers", () => {
     ]);
     expect(completeDays("2026-10-20", "2026-10-21", null, true)).toEqual(["2026-10-21", "2026-10-20"]);
     expect(completeDays("2026-10-20", "2026-10-21", null, false)).toEqual([]);
+  });
+});
+
+describe("skipping work already done (frequent scheduled runs)", () => {
+  const now = new Date("2026-10-24T19:00:00Z");
+  const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
+
+  it("treats recent days with complaints as fresh, and zero days as not done", () => {
+    expect(isFresh({ day: "2026-10-23", total: 40, fetched_at: hoursAgo(1) }, now, 6)).toBe(true);
+    expect(isFresh({ day: "2026-10-23", total: 40, fetched_at: hoursAgo(7) }, now, 6)).toBe(false);
+    expect(isFresh({ day: "2026-10-23", total: 0, fetched_at: hoursAgo(1) }, now, 6)).toBe(false);
+    expect(isFresh(undefined, now, 6)).toBe(false);
+  });
+
+  it("skips refresh days fetched recently, but still fills missing days", () => {
+    const ingested = [
+      { area_code: "201", day: "2026-10-23", total: 50, fetched_at: hoursAgo(1) },
+      { area_code: "201", day: "2026-10-22", total: 0, fetched_at: hoursAgo(1) },
+    ];
+    const days = daysToFetch("2026-10-24", ["201"], ingested, 3, 3, { now, freshHours: 6 }).map((d) => d.day);
+    // 10-23 is fresh (skipped); 10-22 had zero (re-check); 10-21 is missing.
+    expect(days).toEqual(["2026-10-22", "2026-10-21"]);
+  });
+
+  it("skips states whose whole window is fresh", () => {
+    const fresh = (state: string, day: string, total = 10) => ({ state, day, total, fetched_at: hoursAgo(1) });
+    const status = [
+      fresh("NJ", "2026-10-23"), fresh("NJ", "2026-10-22"), fresh("NJ", "2026-10-21"),
+      fresh("NY", "2026-10-23"), fresh("NY", "2026-10-22"),
+      fresh("WY", "2026-10-23", 0), fresh("WY", "2026-10-22"), fresh("WY", "2026-10-21"),
+    ];
+    expect(statesNeedingFetch(["NJ", "NY", "WY", "CA"], status, "2026-10-21", "2026-10-23", now, 6)).toEqual([
+      "NY", // missing 10-21
+      "WY", // zero day re-checked
+      "CA", // never fetched
+    ]);
   });
 });

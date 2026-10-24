@@ -10,7 +10,8 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 - [ ] **Admin access:** you're in `public.admins` in prod (README → Trust and safety). Flag emails and `/admin` depend on it.
 - [ ] **Market settings** in prod (`public.markets`): **NY 845** (center 10989, 30 miles) and **NJ Bergen** (201 and 551, center 07601, 18 miles). Police contact and radius: see Open follow-ups.
 - [ ] **Legal pages reviewed** (see Open follow-ups).
-- [ ] **Cron jobs** show in Vercel → Settings → Cron Jobs (`/api/cron/ingest` 18:00 UTC, `/api/cron/digest` 12:00 UTC), and the last runs succeeded.
+- [ ] **Cron jobs** show in Vercel → Settings → Cron Jobs (`/api/cron/ingest` 18:00 UTC backup, `/api/cron/digest` 12:00 UTC), and the last runs succeeded.
+- [ ] **GitHub Actions ingest schedule:** repo secret `PROD_CRON_SECRET` is set (Settings → Secrets and variables → Actions), and GitHub → Actions → **Ingest FTC data** shows weekday runs every 15 minutes, 17:00–20:45 UTC.
 - [ ] **Env vars set in Production:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RATE_LIMIT_SALT`, `FTC_API_KEY`. Optional: `EMAIL_DAILY_BUDGET` (default 90), `ALERT_INSTANT_THRESHOLD` (default 3).
 - [ ] **Plan limits understood** (below).
 - [ ] **Seed 10–20 real local reports** through the normal report form (ideally posted by the neighbors themselves, with their permission), so the feed isn't empty on day one.
@@ -24,7 +25,8 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 - [ ] **Radius decision:** the NY 845 market covers 30 miles from 10989, but area code 845 reaches farther (e.g. Middletown, Poughkeepsie). To cover more of it:
       `update public.markets set radius_miles = 45 where name = 'NY 845';`
 - [ ] **Supabase inactivity pauses:** free-plan projects pause after about a week of low activity. Prod should stay active (the daily cron jobs query it), but the **dev** project can pause between work sessions, and previews then fail until it's restored. Restore from the Supabase dashboard, or upgrade if pauses become a problem.
-- [ ] **FTC data coverage:** state trends build up from the first ingest (no backfill), so most states show "N days of data so far" for the first week and comparisons after two. If the shared api.data.gov quota keeps cutting runs short, request a higher limit at api.data.gov (free).
+- [ ] **FTC data coverage:** state trends build up from the first ingest (no backfill), so most states show "N days of data so far" for the first week and comparisons after two. The API's burst throttle (~100 requests per run from Vercel) is why ingest runs every 15 minutes on weekday afternoons.
+- [ ] **GitHub pauses scheduled workflows** in public repos after 60 days without repository activity (it emails a warning). If that happens, re-enable **Ingest FTC data** under Actions; the Vercel cron keeps NY/NJ covered meanwhile.
 - [ ] **Resend free-tier limit:** 100 emails a day including sign-in emails. Alerts stop at `EMAIL_DAILY_BUDGET` (90) and you get a "daily email limit" email. If that happens, or digest users pass ~80, upgrade Resend and raise `EMAIL_DAILY_BUDGET` in Vercel.
 
 ## Plan limits
@@ -40,7 +42,7 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 
 1. Read the **Monday summary email** (last week's numbers and the targets), or open `/admin/metrics`.
 2. Review **`/admin`** for flagged reports and reports from limited accounts. Remove, dismiss, or restore.
-3. Act on any **"data import had problems"**, **"digest had failures"**, or **"daily email limit"** emails.
+3. Act on any **"data import had problems"**, **"trend data is behind"**, **"digest had failures"**, or **"daily email limit"** emails.
 4. Note feedback from people in person or by email (footer "Send feedback" goes to `SUPPORT_EMAIL` in `src/lib/site.ts`).
 
 ## Success criteria (weeks 4–8)

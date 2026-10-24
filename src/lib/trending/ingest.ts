@@ -2,7 +2,18 @@ import "server-only";
 import { easternDate } from "@/lib/alerts/policy";
 import { STATE_NAMES } from "@/lib/states";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { aggregateDnc, bucketByDay, completeDays, daysToFetch, fromState, recordDay, shiftDate, type DncRecord } from "./dnc";
+import {
+  aggregateDnc,
+  bucketByDay,
+  completeDays,
+  daysToFetch,
+  fromState,
+  recordDay,
+  shiftDate,
+  statesNeedingFetch,
+  type DncRecord,
+  type IngestStatus,
+} from "./dnc";
 import { parseIc3Rss } from "./ic3";
 
 const DNC_URL = "https://api.ftc.gov/v0/dnc-complaints";
@@ -23,6 +34,9 @@ const MAX_STATE_PAGES = 120;
 // the day on a 429. Markets run first; states get whatever time is left.
 const PACE_MS = 400;
 const RUN_TIME_BUDGET_MS = 240_000;
+// Scheduled runs repeat every 15 minutes (GitHub Actions) plus a daily Vercel
+// cron; skip days and states fetched within this window (see isFresh).
+const FRESH_HOURS = 6;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -62,22 +76,29 @@ async function fetchAreaCodeDay(apiKey: string, areaCode: string, day: string): 
   throw new Error(`more than ${MAX_PAGES_PER_DAY} pages for ${areaCode} ${day}`);
 }
 
-async function ingestMarkets(apiKey: string, today: string, deadline: number) {
+async function ingestMarkets(apiKey: string, today: string, deadline: number, now: Date) {
   const admin = createAdminClient();
   const { data: markets, error } = await admin.from("markets").select("state, area_codes").eq("active", true);
   if (error) throw new Error(`markets lookup failed: ${error.message}`);
   const stateByAreaCode = new Map<string, string>();
   for (const m of markets ?? []) for (const code of m.area_codes as string[]) stateByAreaCode.set(code, m.state as string);
 
-  const { data: ingested, error: ingestedError } = await admin.rpc("dnc_ingested_days", {
+  const { data: ingested, error: ingestedError } = await admin.rpc("dnc_ingest_status", {
     p_since: shiftDate(today, WINDOW_DAYS),
   });
-  if (ingestedError) throw new Error(`dnc_ingested_days failed: ${ingestedError.message}`);
+  if (ingestedError) throw new Error(`dnc_ingest_status failed: ${ingestedError.message}`);
 
   let days = 0;
   let failed = 0;
   let rateLimited = false;
-  const work = daysToFetch(today, [...stateByAreaCode.keys()], ingested as { area_code: string; day: string }[], WINDOW_DAYS, REFRESH_DAYS);
+  const work = daysToFetch(
+    today,
+    [...stateByAreaCode.keys()],
+    ingested as ({ area_code: string } & IngestStatus)[],
+    WINDOW_DAYS,
+    REFRESH_DAYS,
+    { now, freshHours: FRESH_HOURS },
+  );
   for (const { areaCode, day } of work) {
     if (Date.now() > deadline) break;
     try {
@@ -165,7 +186,7 @@ async function ingestState(
   return { days: days.length, complete: finished, error: fetchError };
 }
 
-async function ingestStates(apiKey: string, today: string, deadline: number, priority: string[]) {
+async function ingestStates(apiKey: string, today: string, deadline: number, priority: string[], now: Date) {
   const toDay = shiftDate(today, 1);
   const fromDay = shiftDate(today, STATE_DEPTH_DAYS);
   // Market states first (their fallback matters most), then the rest, rotated
@@ -173,7 +194,15 @@ async function ingestStates(apiKey: string, today: string, deadline: number, pri
   const codes = Object.keys(STATE_NAMES);
   const offset = Math.floor(Date.parse(`${today}T00:00:00Z`) / 86_400_000) % codes.length;
   const rotated = [...codes.slice(offset), ...codes.slice(0, offset)];
-  const queue = [...new Set([...priority.filter((c) => c in STATE_NAMES), ...rotated])];
+  const ordered = [...new Set([...priority.filter((c) => c in STATE_NAMES), ...rotated])];
+
+  // Skip states already fetched recently (earlier runs today).
+  const { data: status, error: statusError } = await createAdminClient().rpc("dnc_state_ingest_status", {
+    p_since: fromDay,
+  });
+  if (statusError) throw new Error(`dnc_state_ingest_status failed: ${statusError.message}`);
+  const queue = statesNeedingFetch(ordered, status as ({ state: string } & IngestStatus)[], fromDay, toDay, now, FRESH_HOURS);
+  const skipped = ordered.length - queue.length;
 
   let requests = 0;
   let rateLimited = false;
@@ -200,7 +229,7 @@ async function ingestStates(apiKey: string, today: string, deadline: number, pri
       failed++;
     }
   }
-  return { statesComplete, statesPartial, failed, requests, rateLimited, totalStates: codes.length };
+  return { statesComplete, statesPartial, skipped, failed, requests, rateLimited, totalStates: codes.length };
 }
 
 async function ingestDnc(now: Date) {
@@ -211,13 +240,21 @@ async function ingestDnc(now: Date) {
   }
   const today = easternDate(now);
   const deadline = Date.now() + RUN_TIME_BUDGET_MS;
-  const markets = await ingestMarkets(apiKey, today, deadline);
+  const markets = await ingestMarkets(apiKey, today, deadline, now);
   // If the markets already hit the throttle, don't spend more requests today.
   const { data: marketRows } = await createAdminClient().from("markets").select("state").eq("active", true);
   const priority = [...new Set((marketRows ?? []).map((m) => m.state as string))];
   const states = markets.rateLimited
-    ? { statesComplete: 0, statesPartial: 0, failed: 0, requests: 0, rateLimited: true, totalStates: Object.keys(STATE_NAMES).length }
-    : await ingestStates(apiKey, today, deadline, priority);
+    ? {
+        statesComplete: 0,
+        statesPartial: 0,
+        skipped: 0,
+        failed: 0,
+        requests: 0,
+        rateLimited: true,
+        totalStates: Object.keys(STATE_NAMES).length,
+      }
+    : await ingestStates(apiKey, today, deadline, priority, now);
   return { skipped: false as const, markets, states };
 }
 
