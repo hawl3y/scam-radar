@@ -5,6 +5,7 @@ import { easternDate } from "@/lib/alerts/policy";
 import { isCronRequest } from "@/lib/cron-auth";
 import { sendWeeklyPilotEmail } from "@/lib/pilot-report";
 import { SITE_NAME } from "@/lib/site";
+import { checkTrendCoverage } from "@/lib/trending/coverage";
 
 export const maxDuration = 300;
 
@@ -33,6 +34,11 @@ export async function GET(request: NextRequest) {
   // Monday (Eastern): weekly pilot summary for admins.
   const weekday = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" }).format(now);
   if (weekday === "Mon") await sendWeeklyPilotEmail().catch((e) => console.error("weekly summary failed", e));
+
+  // Tue–Sat mornings: did yesterday's (weekday) ingest runs cover the markets and most states?
+  if (["Tue", "Wed", "Thu", "Fri", "Sat"].includes(weekday)) {
+    await checkTrendCoverage(today).catch((e) => console.error("coverage check failed", e));
+  }
 
   return NextResponse.json(result);
 }
