@@ -15,7 +15,7 @@ export type EmailCluster = {
   latest_channel: Channel;
 };
 
-export type EmailLinks = { siteUrl: string; prefsUrl: string; homeZip: string | null };
+export type EmailLinks = { siteUrl: string; prefsUrl: string; homeZip: string | null; source?: "digest" | "instant" };
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
@@ -23,8 +23,12 @@ const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 function alertUrl(cluster: EmailCluster, links: EmailLinks) {
-  const zip = links.homeZip ? `?zip=${encodeURIComponent(links.homeZip)}` : "";
-  return `${links.siteUrl}/alerts/${cluster.cluster_id}${zip}`;
+  const params = new URLSearchParams();
+  if (links.homeZip) params.set("zip", links.homeZip);
+  // Counted as an anonymous "visit from email" (no open tracking).
+  if (links.source) params.set("src", links.source);
+  const query = params.toString();
+  return `${links.siteUrl}/alerts/${cluster.cluster_id}${query ? `?${query}` : ""}`;
 }
 
 function excerpt(text: string, max = 280) {
@@ -74,7 +78,8 @@ function textFooter(links: EmailLinks) {
   return `\n\nWe'll never ask you to sign in or share personal details from an email.\nChange or stop these emails: ${links.prefsUrl}`;
 }
 
-export function renderInstantEmail(cluster: EmailCluster, links: EmailLinks): RenderedEmail {
+export function renderInstantEmail(cluster: EmailCluster, baseLinks: EmailLinks): RenderedEmail {
+  const links = { ...baseLinks, source: "instant" as const };
   const label = SCAM_TYPES[cluster.scam_type].label;
   const intro = "Several neighbors near you have reported this. Here's what it looks like and what to do.";
   return {
@@ -84,12 +89,13 @@ export function renderInstantEmail(cluster: EmailCluster, links: EmailLinks): Re
   };
 }
 
-export function renderDigestEmail(clusters: EmailCluster[], totalItems: number, links: EmailLinks): RenderedEmail {
+export function renderDigestEmail(clusters: EmailCluster[], totalItems: number, baseLinks: EmailLinks): RenderedEmail {
+  const links = { ...baseLinks, source: "digest" as const };
   const count = totalItems === 1 ? "1 scam" : `${totalItems} scams`;
   const intro = `Here's what neighbors reported near you recently: ${count}.`;
   const more =
     totalItems > clusters.length
-      ? `<p style="margin:0 0 16px"><a href="${escapeHtml(links.siteUrl)}" style="color:#1d4ed8">See all ${totalItems} in the app</a></p>`
+      ? `<p style="margin:0 0 16px"><a href="${escapeHtml(`${links.siteUrl}/?src=digest`)}" style="color:#1d4ed8">See all ${totalItems} in the app</a></p>`
       : "";
   return {
     subject: `${count} reported near you`,

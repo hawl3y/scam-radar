@@ -30,7 +30,7 @@ describe("renderInstantEmail", () => {
   });
 
   it("links to the alert and preferences, never to sign-in", () => {
-    expect(email.html).toContain(`https://scam-radar.example/alerts/${cluster.cluster_id}?zip=10989`);
+    expect(email.html).toContain(`https://scam-radar.example/alerts/${cluster.cluster_id}?zip=10989&amp;src=instant`);
     expect(email.text).toContain(links.prefsUrl);
     expect(email.html).not.toMatch(/\/login/);
     expect(email.text).toContain("2.4 mi away");
@@ -43,5 +43,6 @@ describe("renderDigestEmail", () => {
     expect(email.subject).toBe("4 scams reported near you");
     expect(email.html).toContain("See all 4 in the app");
     expect(renderDigestEmail([cluster], 1, links).subject).toBe("1 scam reported near you");
+    expect(email.text).toContain(`/alerts/${cluster.cluster_id}?zip=10989&src=digest`);
   });
 });
