@@ -29,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${atkinson.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        <header className="border-b border-border print:hidden">
+        <header className="bg-surface shadow-sm print:hidden">
           <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-x-4 px-4 py-3">
             <Link href="/" className="inline-flex min-h-12 items-center">
               <Logo className="h-9 w-auto" />
@@ -47,27 +47,31 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </nav>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 print:max-w-none print:p-0">{children}</main>
-        <footer className="border-t border-border print:hidden">
+        <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:py-12 print:max-w-none print:p-0">
+          <div className="rounded-2xl bg-surface p-5 shadow-sm sm:p-8 print:rounded-none print:bg-transparent print:p-0 print:shadow-none">
+            {children}
+          </div>
+        </main>
+        <footer className="mt-4 bg-footer print:hidden">
           <nav
             aria-label="About"
-            className="mx-auto flex max-w-2xl flex-wrap gap-x-6 px-4 py-4 text-muted"
+            className="mx-auto flex max-w-2xl flex-wrap justify-center gap-x-6 px-4 py-6 text-sm text-muted"
           >
-            <Link href="/next-steps" className="inline-flex min-h-12 items-center underline">
+            <Link href="/next-steps" className="inline-flex min-h-12 items-center underline-offset-4 hover:underline">
               If you&apos;ve been scammed
             </Link>
-            <Link href="/rules" className="inline-flex min-h-12 items-center underline">
+            <Link href="/rules" className="inline-flex min-h-12 items-center underline-offset-4 hover:underline">
               Community rules
             </Link>
-            <Link href="/terms" className="inline-flex min-h-12 items-center underline">
+            <Link href="/terms" className="inline-flex min-h-12 items-center underline-offset-4 hover:underline">
               Terms
             </Link>
-            <Link href="/privacy" className="inline-flex min-h-12 items-center underline">
+            <Link href="/privacy" className="inline-flex min-h-12 items-center underline-offset-4 hover:underline">
               Privacy
             </Link>
             <a
               href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`${SITE_NAME} feedback`)}`}
-              className="inline-flex min-h-12 items-center underline"
+              className="inline-flex min-h-12 items-center underline-offset-4 hover:underline"
             >
               Send feedback
             </a>
