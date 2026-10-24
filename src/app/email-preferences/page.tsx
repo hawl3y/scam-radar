@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Email preferences", robots: { index:
 // Reached from links in alert emails. Works without signing in.
 export default function EmailPreferencesPage({ searchParams }: PageProps<"/email-preferences">) {
   return (
-    <section className="space-y-6">
+    <section className="max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">Email preferences</h1>
       <Suspense fallback={<p>Loading…</p>}>
         <Prefs searchParams={searchParams} />

@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default function SettingsPage({ searchParams }: PageProps<"/settings">) {
   return (
-    <section className="space-y-6">
+    <section className="max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">Settings</h1>
       <Suspense fallback={<p>Loading your settings…</p>}>
         <Settings searchParams={searchParams} />

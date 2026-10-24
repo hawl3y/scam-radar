@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Report a scam" };
 
 export default function ReportPage() {
   return (
-    <section className="space-y-6">
+    <section className="max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">Report a scam</h1>
       <p>Tell neighbors what to watch for. It takes about a minute.</p>
       <Suspense fallback={<p>Loading…</p>}>
