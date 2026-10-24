@@ -1,6 +1,6 @@
-# Scam Radar pilot
+# ByeBell pilot
 
-Launch as **Scam Radar** at https://scam-radar.joechawley.com. The name is decided only if the pilot continues (see the rename checklist below).
+The app is **ByeBell** ("Ring the bell on scams"; formerly the working title Scam Radar). It's moving from scam-radar.joechawley.com to **byebell.com**; follow the rename checklist below, then reprint flyers.
 
 Status: Phases 0–6 are merged and live. Work through the launch checklist and open follow-ups, then start recruiting.
 
@@ -64,7 +64,9 @@ After 4–8 weeks, decide: **continue** (most targets met), **adjust** (some met
 
 ## Rename / new domain checklist
 
-Use this if the pilot continues and the app gets a permanent name or domain. Keep the old domain working during the switch: printed flyers, emailed alert links, and unsubscribe links all point to it.
+**In progress: ByeBell at byebell.com.** The name is done in code (display name, logo, icons). The domain steps below are next.
+
+Use this for any future rename or domain change too. Keep the old domain working during the switch: printed flyers, emailed alert links, and unsubscribe links all point to it.
 
 **1. Code** (one file, then a PR)
 - [ ] `src/lib/site.ts`: `SITE_NAME`, `PUBLIC_SITE_URL`, `ALERTS_FROM_EMAIL`, and `SUPPORT_EMAIL` if it changes. Page titles, the manifest, emails, legal pages, the flyer, and admin email subjects all read from here.

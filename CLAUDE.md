@@ -1,12 +1,13 @@
 # CLAUDE.md — scam-radar
 
 ## Current status (Oct 2026)
-- **Phases 0–6 are complete and merged.** The app is live at https://scam-radar.joechawley.com (Vercel + Supabase prod).
+- **Phases 0–6 are complete and merged.** The app is live (Vercel + Supabase prod).
+- **The app is now ByeBell** (official; tagline "Ring the bell on scams"). The display name, logo (`src/components/logo.tsx`), and app icons are ByeBell. **Domain move in progress:** scam-radar.joechawley.com → **byebell.com**, following `PILOT.md` → Rename / new domain checklist. Until that's finished, URLs and sender addresses still use scam-radar.joechawley.com.
 - **The pilot is starting.** Next steps, open follow-ups, the weekly routine, and the rename checklist are in `PILOT.md`.
 - **Unwanted-call trends (updated Oct 24, PRs #12–#14):** markets match only zips in the **same state** within their radius (zip states from the Census ZCTA file). Markets: **NY 845** and **NJ Bergen** (201/551). Every other state gets state-level trends; no data shows "No local trend data for your area yet". Labels name the state and area codes, never "near you".
 - **FTC ingest:** the API's burst throttle (~100 requests per run from Vercel, likely per IP) shapes everything. Requests are paced one at a time, markets first (days interleaved across area codes), then market states, then a daily rotation; a 429 stops the run and keeps completed days; repeat runs skip work done in the last 6 hours. **GitHub Actions** (`.github/workflows/ingest.yml`, secret `PROD_CRON_SECRET`) runs it every 15 minutes, 17:00–20:45 UTC, Mon–Fri; **Vercel Cron** at 18:00 UTC is the backup. Ingest emails admins only on real errors; a daily **coverage check** (digest cron, Tue–Sat) emails if a market area code or more than 12 states weren't fetched. Details: README → Unwanted-call trends.
 - Phase statuses and every decision made during the build (matching, alerts, reputation, limits, pilot targets) are in `PROJECT_BRIEF.md` §8 and §10. Future work is §11; don't start it without the owner.
-- Name, domain, and sender emails are set in `src/lib/site.ts` (plus the outside-the-code places in `PILOT.md`).
+- Name, tagline, domain, and sender emails are set in `src/lib/site.ts` (plus the outside-the-code places in `PILOT.md`). The repo and infrastructure names keep "scam-radar".
 
 ## Start here
 1. Read `PROJECT_BRIEF.md` fully before planning or writing code. It is the source of truth.

@@ -1,8 +1,8 @@
-# Local Scam Radar — Project Brief (MVP)
+# ByeBell — Project Brief (MVP)
 
-> **Status (Oct 2026):** Phases 0–6 are built, merged, and live at https://scam-radar.joechawley.com. The pilot is starting; see `PILOT.md`. Decisions made during the build are in §10.
+> **Status (Oct 2026):** Phases 0–6 are built, merged, and live. The app is now **ByeBell** ("Ring the bell on scams"; formerly the working title Scam Radar) and is moving from scam-radar.joechawley.com to **byebell.com** (see `PILOT.md` → Rename / new domain checklist). The pilot is starting. Decisions made during the build are in §10.
 >
-> Working title. This brief is the source of truth for the MVP. Read it fully before planning or writing code. When a decision here conflicts with a default you'd otherwise choose, follow this brief and flag the conflict.
+> This brief is the source of truth for the MVP. Read it fully before planning or writing code. When a decision here conflicts with a default you'd otherwise choose, follow this brief and flag the conflict.
 
 ## 1. What we're building
 
@@ -192,7 +192,7 @@ Settled during the build (the former open questions plus later decisions). Chang
 
 | Topic | Decision |
 |---|---|
-| Name and domain | Launch as **Scam Radar** at scam-radar.joechawley.com. The name is decided **only if the pilot continues** (rename checklist in `PILOT.md`). |
+| Name and domain | **ByeBell** (tagline "Ring the bell on scams"), official. Production domain **byebell.com** (registered at DreamHost); scam-radar.joechawley.com redirects to it after the switch. The repo, Supabase/Vercel project names, and internal identifiers keep "scam-radar". |
 | Matching | Postgres `pg_trgm` text similarity, **no AI**. Join a cluster at score ≥ 0.45; Check shows matches at ≥ 0.32 (calibrated with `scripts/calibrate-matching.mts`). Clustering ignores scam type; 50-mile, 90-day window. |
 | Redaction | Rules only. The reporter sees and edits a redacted preview before posting; the server redacts again on post. Links are kept but always shown defanged and never clickable. |
 | Location | Zip code centers only (US Census ZCTA). Default radius 10 miles (choices 5, 10, 25). |
@@ -214,7 +214,7 @@ Not planned for the MVP. Revisit only if the pilot continues, and with the owner
 
 - **AI matching and redaction:** embeddings for clustering and Check (replacing the `pg_trgm` function bodies; pgvector is already enabled), an AI redaction pass after the rules, and generated plain-English Check answers. Trigger: paraphrased reports of the same scam don't cluster, or Check misses obvious matches. Only rules-redacted text would be sent to an AI provider.
 - **Web push** for home-screen users, plus the home-screen icon badge for "new near you".
-- **Renaming / new domain:** pick a permanent name and domain (checklist in `PILOT.md`).
+- **Renaming / new domain:** done: ByeBell at byebell.com (checklist in `PILOT.md`).
 - **More areas:** add rows to `markets` (no code change); multi-region admin tooling stays a non-goal until needed.
 - **Sponsors, payments, or donations** (currently a non-goal).
 - **Native iOS/Android apps** (currently a non-goal).
