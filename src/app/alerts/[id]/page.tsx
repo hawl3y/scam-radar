@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -7,13 +8,33 @@ import { crowdLabel } from "@/lib/crowd";
 import { formatDistance, formatTimeAgo } from "@/lib/format";
 import { defang } from "@/lib/redaction";
 import { CHANNELS, SCAM_TYPES } from "@/lib/scam-types";
+import { createPublicClient } from "@/lib/supabase/public";
+import { RecordUsage } from "@/components/record-usage";
 import { getViewer } from "@/lib/viewer";
 import { CorroborateButton } from "./corroborate-button";
 import { ExampleActions } from "./example-actions";
-
-export const metadata: Metadata = { title: "Scam alert" };
+import { ShareButton } from "./share-button";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Link previews show the scam type and counts only, never report text.
+async function getPreview(id: string) {
+  "use cache";
+  cacheLife("minutes");
+  if (!UUID.test(id)) return null;
+  const { data } = await createPublicClient().rpc("get_cluster", { p_cluster_id: id });
+  const cluster = (data as { scam_type: keyof typeof SCAM_TYPES; report_count: number; corroboration_count: number }[] | null)?.[0];
+  if (!cluster) return null;
+  return { title: SCAM_TYPES[cluster.scam_type].label, description: crowdLabel(cluster.report_count, cluster.corroboration_count) };
+}
+
+export async function generateMetadata({ params }: PageProps<"/alerts/[id]">): Promise<Metadata> {
+  const preview = await getPreview((await params).id);
+  if (!preview) return { title: "Scam alert" };
+  const title = `Scam alert: ${preview.title}`;
+  const description = `${preview.description}. See what it looks like and what to do.`;
+  return { title, description, openGraph: { title, description, type: "article" }, twitter: { card: "summary", title, description } };
+}
 
 export default function AlertPage({ params, searchParams }: PageProps<"/alerts/[id]">) {
   return (
@@ -24,8 +45,12 @@ export default function AlertPage({ params, searchParams }: PageProps<"/alerts/[
 }
 
 async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
-  const [{ id }, { zip, posted, hidden }] = await Promise.all([params, searchParams]);
+  const [{ id }, { zip, posted, hidden, src }] = await Promise.all([params, searchParams]);
   if (!UUID.test(id)) notFound();
+  const emailVisit =
+    src === "digest" || src === "instant" ? (
+      <RecordUsage metrics={[src === "digest" ? "email_visit_digest" : "email_visit_instant"]} />
+    ) : null;
 
   const viewer = await getViewer(zip);
   const viewerZip = viewer.kind === "located" ? viewer.zip : null;
@@ -47,6 +72,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
     // The flag hid the only report neighbors could see in this alert.
     return (
       <section className="space-y-4">
+        {emailVisit}
         {hiddenNotice}
         <Link href={backHref} className="inline-flex min-h-12 items-center underline">
           Back to scams near you
@@ -61,6 +87,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
 
   return (
     <article className="space-y-6">
+      {emailVisit}
       {hiddenNotice}
       {posted && (
         <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
@@ -74,7 +101,10 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
         <p className="text-muted">{meta}</p>
       </header>
 
-      <CorroborateButton clusterId={cluster.cluster_id} status={status} />
+      <div className="flex flex-wrap items-start gap-4">
+        <CorroborateButton clusterId={cluster.cluster_id} status={status} />
+        <ShareButton clusterId={cluster.cluster_id} title={type.label} />
+      </div>
 
       <section className="space-y-3">
         <h2 className="text-xl font-bold">What it looked like</h2>

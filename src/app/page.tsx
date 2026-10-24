@@ -4,6 +4,7 @@ import { FeedList } from "@/components/feed-list";
 import { TrendingSection } from "@/components/trending-section";
 import { ZipForm } from "@/components/zip-form";
 import { getNearbyClusters } from "@/lib/clusters";
+import { RecordUsage } from "@/components/record-usage";
 import { getViewer } from "@/lib/viewer";
 import { SITE_DESCRIPTION } from "@/lib/site";
 
@@ -35,8 +36,9 @@ export default function Home({ searchParams }: PageProps<"/">) {
 }
 
 async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
-  const { zip, deleted } = await searchParams;
+  const { zip, deleted, src } = await searchParams;
   const viewer = await getViewer(zip);
+  const usage = <RecordUsage metrics={src === "digest" ? ["feed_view", "email_visit_digest"] : ["feed_view"]} />;
   const deletedNotice = deleted ? (
     <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
       Your account and everything tied to it were deleted.
@@ -56,6 +58,7 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
     }
     return (
       <div className="space-y-4">
+        {usage}
         {deletedNotice}
         <p className="text-lg text-muted">{SITE_DESCRIPTION}</p>
         {viewer.unknownZip && (
@@ -70,6 +73,29 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
           </Link>{" "}
           to save your zip code, report scams, and get alerts.
         </p>
+        <section className="space-y-3 pt-4" aria-labelledby="how-it-works">
+          <h2 id="how-it-works" className="text-2xl font-bold">
+            How it works
+          </h2>
+          <ol className="list-decimal space-y-2 pl-6">
+            <li>Neighbors report scam texts, calls, emails, and visits. Personal details are hidden before anything is posted.</li>
+            <li>Reports of the same scam are grouped, so you can see what&apos;s spreading near you and what to do.</li>
+            <li>
+              Got something suspicious?{" "}
+              <Link href="/check" className="underline">
+                Check it
+              </Link>{" "}
+              to see if neighbors got it too.
+            </li>
+          </ol>
+          <p className="text-muted">
+            Free, with no passwords. We never sell your information (see our{" "}
+            <Link href="/privacy" className="underline">
+              privacy policy
+            </Link>
+            ). Not affiliated with the BBB, the FTC, or the police.
+          </p>
+        </section>
       </div>
     );
   }
@@ -79,6 +105,7 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
 
   return (
     <div className="space-y-4">
+      {usage}
       <p className="text-muted">
         Within {viewer.radiusMiles} miles of {viewer.zip} ·{" "}
         <Link href={viewer.signedIn ? "/settings" : "/"} className="underline">

@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseEnv } from "./env";
 
 const PROTECTED_PATHS = ["/settings", "/report", "/admin"];
+const ACTIVITY_COOKIE = "sr_active_day";
 
 const isProtected = (pathname: string) =>
   PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -32,6 +33,23 @@ export async function updateSession(request: NextRequest) {
   // Don't run code between createServerClient and getClaims().
   const { data } = await supabase.auth.getClaims();
   const signedIn = Boolean(data?.claims);
+
+  // Pilot metrics: one activity row per signed-in user per day.
+  if (signedIn) {
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
+    if (request.cookies.get(ACTIVITY_COOKIE)?.value !== today) {
+      const { error } = await supabase.rpc("touch_activity");
+      if (!error) {
+        response.cookies.set(ACTIVITY_COOKIE, today, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: true,
+          path: "/",
+          maxAge: 60 * 60 * 36,
+        });
+      }
+    }
+  }
 
   const { pathname, search } = request.nextUrl;
   if (!signedIn && isProtected(pathname)) {

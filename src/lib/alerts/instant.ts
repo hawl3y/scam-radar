@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Channel, ScamType } from "@/lib/scam-types";
+import { alertEmailsRemaining, warnBudgetReached } from "./budget";
 import { renderInstantEmail } from "./emails";
 import { INSTANT_DAILY_LIMIT, isHot, underInstantLimit } from "./policy";
 import { linksFor, sendAlertEmail } from "./send";
@@ -39,7 +40,14 @@ export async function sendInstantAlerts(clusterId: string): Promise<{ sent: numb
   if (recipientsError) throw new Error(`instant_alert_recipients failed: ${recipientsError.message}`);
 
   let sent = 0;
+  let overBudget = 0;
+  let remaining = await alertEmailsRemaining();
   for (const recipient of underInstantLimit(recipients as Recipient[])) {
+    if (remaining <= 0) {
+      // Not claimed, so the cluster still appears in their next digest.
+      overBudget++;
+      continue;
+    }
     const { data: batchId, error: claimError } = await admin.rpc("claim_instant_alert", {
       p_user_id: recipient.user_id,
       p_cluster_id: clusterId,
@@ -68,10 +76,12 @@ export async function sendInstantAlerts(clusterId: string): Promise<{ sent: numb
       );
       await sendAlertEmail(recipient.email, email, links.unsubscribeUrl, `instant-${batchId}`);
       sent++;
+      remaining--;
     } catch (e) {
       console.error("instant alert send failed", e);
       await admin.rpc("release_alert_batch", { p_batch_id: batchId });
     }
   }
+  if (overBudget > 0) await warnBudgetReached(overBudget, "instant");
   return { sent };
 }

@@ -15,6 +15,7 @@ export default function PrivacyPage() {
       <h2>What we store</h2>
       <ul>
         <li><strong>Your email address</strong>, to sign you in and send alerts you asked for.</li>
+        <li><strong>Which days you used the app while signed in</strong>, to count returning users (see below).</li>
         <li><strong>Your zip code, distance, and email settings.</strong> We store the center of your zip code, never your address.</li>
         <li><strong>Reports you post.</strong> Phone numbers, emails, names, addresses, and account numbers are hidden before a report is saved, and you can edit it before posting. We never store the original text. A report&apos;s location is the center of the zip code you enter.</li>
         <li><strong>Your &quot;I got this too&quot; answers, helpful ratings, and problem reports</strong> (notes are hidden the same way as reports).</li>
@@ -43,6 +44,14 @@ export default function PrivacyPage() {
         information.
       </p>
 
+      <h2>How we measure the pilot</h2>
+      <p>
+        To learn whether {SITE_NAME} is useful, we count things in total, such as feed views, checks, shares, and visits
+        from alert emails. These counts aren&apos;t linked to you. If you&apos;re signed in, we also note which days you
+        used the app (not what you looked at), so we can count how many people come back. That record is deleted with
+        your account. We don&apos;t use analytics companies, tracking cookies, or email open tracking.
+      </p>
+
       <h2>Services we use</h2>
       <ul>
         <li><strong>Supabase</strong> stores our database and handles sign-in.</li>
@@ -53,7 +62,8 @@ export default function PrivacyPage() {
 
       <h2>Cookies and browser storage</h2>
       <p>
-        We use cookies only to keep you signed in. If you&apos;re not signed in, your browser remembers when you last
+        We use cookies only to keep you signed in and, once a day, to note that you used the app (so we don&apos;t record
+        it more than once). If you&apos;re not signed in, your browser remembers when you last
         viewed the feed so we can label new reports. That stays on your device.
       </p>
 

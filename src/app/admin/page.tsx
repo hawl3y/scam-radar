@@ -78,6 +78,12 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
             {label}
           </Link>
         ))}
+        <Link
+          href="/admin/metrics"
+          className="inline-flex min-h-12 items-center rounded-md border-2 border-border px-4 font-bold"
+        >
+          Pilot metrics
+        </Link>
       </nav>
 
       {reports.length === 0 ? (

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
 import Link from "next/link";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, SUPPORT_EMAIL } from "@/lib/site";
 import "./globals.css";
 
 const atkinson = Atkinson_Hyperlegible({
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${atkinson.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        <header className="border-b border-border">
+        <header className="border-b border-border print:hidden">
           <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-x-4 px-4 py-3">
             <Link href="/" className="text-xl font-bold">
               {SITE_NAME}
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </header>
         <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">{children}</main>
-        <footer className="border-t border-border">
+        <footer className="border-t border-border print:hidden">
           <nav
             aria-label="About"
             className="mx-auto flex max-w-2xl flex-wrap gap-x-6 px-4 py-4 text-muted"
@@ -64,6 +64,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/privacy" className="inline-flex min-h-12 items-center underline">
               Privacy
             </Link>
+            <a
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`${SITE_NAME} feedback`)}`}
+              className="inline-flex min-h-12 items-center underline"
+            >
+              Send feedback
+            </a>
           </nav>
         </footer>
         <ServiceWorkerRegistration />

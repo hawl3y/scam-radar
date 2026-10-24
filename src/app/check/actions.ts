@@ -5,6 +5,7 @@ import { findMatchingClusters, type ClusterMatch } from "@/lib/clusters";
 import { allowRequest } from "@/lib/rate-limit";
 import { RATE_LIMITED_MESSAGE, RATE_LIMITS } from "@/lib/rate-limits";
 import { redact } from "@/lib/redaction";
+import { recordUsage } from "@/lib/usage";
 import { createClient } from "@/lib/supabase/server";
 
 const checkSchema = z.object({
@@ -47,5 +48,6 @@ export async function check(_prev: CheckState, formData: FormData): Promise<Chec
   // Match on redacted text only. Nothing here is stored.
   const { text } = redact(parsed.data.text);
   const matches = await findMatchingClusters(text, zip);
+  await recordUsage("check");
   return { status: "result", values, matches, zip };
 }
