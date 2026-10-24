@@ -103,6 +103,20 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 - **No duplicates:** each email is recorded in `alerts_sent` before it's sent and released if sending fails.
 - **Unsubscribe:** every email has one-click unsubscribe headers and a signed link to `/email-preferences` that works without signing in.
 
+## Trust and safety
+
+- **Admin access:** `/admin` is owner-only. Add yourself once per Supabase project (dev and prod) in **SQL Editor**:
+  ```sql
+  insert into public.admins (user_id)
+  select id from auth.users where email = '<your email>';
+  ```
+  Admins get an email when a report is flagged. Don't commit admin emails to the repo.
+- **Flags:** 3 open flags from accounts in good standing auto-hide a report until an admin removes it or dismisses the flags.
+- **Reputation:** computed live by `public.reputation()` (formula in the migration `*_trust_and_safety.sql`). Accounts below 0 are limited: their reports and "got this too" are hidden from others and don't count toward alerts. Newer accounts (below 3) count half toward the instant-alert threshold.
+- **Rate limits:** in `src/lib/rate-limits.ts`. `node scripts/check-rate-limit.mts` verifies the database limiter on the linked dev project.
+- **Account deletion:** Settings → Delete my account removes the user and cascades to their reports, corroborations, ratings, flags, and alert history.
+- **Legal pages:** `/terms`, `/privacy`, `/rules`. The contact address is `SUPPORT_EMAIL` in `src/lib/site.ts`. Update `/privacy` whenever data collection or service providers change.
+
 ## Making changes
 
 1. Branch from `main`: `git checkout -b <feature>`.
