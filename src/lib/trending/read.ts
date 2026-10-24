@@ -19,6 +19,20 @@ export async function getTrendSummary(marketId: number): Promise<TrendSummary | 
   return buildTrends(data as TrendRow[]);
 }
 
+export async function getZipState(zip: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("zip_state", { p_zip: zip });
+  if (error) throw new Error(`zip_state failed: ${error.message}`);
+  return (data as string | null) ?? null;
+}
+
+export async function getStateTrendSummary(state: string): Promise<TrendSummary | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("state_trends", { p_state: state });
+  if (error) throw new Error(`state_trends failed: ${error.message}`);
+  return buildTrends(data as TrendRow[]);
+}
+
 export async function getHeadlines(limit = 3): Promise<PublicHeadline[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("latest_public_scams", { p_limit: limit });
