@@ -1,7 +1,8 @@
 import "server-only";
 import { easternDate } from "@/lib/alerts/policy";
+import { STATE_NAMES } from "@/lib/states";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { aggregateDnc, daysToFetch, shiftDate, type DncRecord } from "./dnc";
+import { aggregateDnc, bucketByDay, completeDays, daysToFetch, fromState, recordDay, shiftDate, type DncRecord } from "./dnc";
 import { parseIc3Rss } from "./ic3";
 
 const DNC_URL = "https://api.ftc.gov/v0/dnc-complaints";
@@ -9,39 +10,55 @@ const IC3_RSS_URL = "https://www.ic3.gov/PSA/RSS";
 const PAGE_SIZE = 50;
 const MAX_PAGES_PER_DAY = 40;
 const WINDOW_DAYS = 14;
+// The FTC publishes weekdays around noon Eastern; re-fetch recent days so
+// late-published complaints are picked up.
+const REFRESH_DAYS = 3;
+// Per-state streams can't filter by date (the API ignores it), so we read each
+// state newest-first, this many days deep. No backfill beyond this.
+const STATE_DEPTH_DAYS = 3;
+// api.data.gov allows ~1,000 requests/hour per key; leave room for markets and retries.
+const STATE_REQUEST_BUDGET = 850;
+const STATE_CONCURRENCY = 3;
+const MAX_STATE_PAGES = 120;
 
-async function fetchDncDay(apiKey: string, areaCode: string, day: string): Promise<DncRecord[]> {
+class RateLimitedError extends Error {}
+
+async function fetchPage(apiKey: string, params: Record<string, string>): Promise<DncRecord[]> {
+  const url = new URL(DNC_URL);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  url.searchParams.set("items_per_page", String(PAGE_SIZE));
+  const res = await fetch(url, { headers: { "X-Api-Key": apiKey }, cache: "no-store" });
+  // api.data.gov's quota is shared and not always what the headers suggest; treat 429 as "stop for today".
+  if (res.status === 429) throw new RateLimitedError("FTC DNC 429");
+  if (!res.ok) throw new Error(`FTC DNC ${res.status}`);
+  const body = (await res.json()) as { data?: DncRecord[] | null };
+  return body.data ?? [];
+}
+
+/** Area code + date filters work together, so markets get exact days. */
+async function fetchAreaCodeDay(apiKey: string, areaCode: string, day: string): Promise<DncRecord[]> {
   const records: DncRecord[] = [];
   for (let page = 0; page < MAX_PAGES_PER_DAY; page++) {
-    const url = new URL(DNC_URL);
-    url.searchParams.set("area_code", areaCode);
-    url.searchParams.set("created_date_from", `${day} 00:00:00`);
-    url.searchParams.set("created_date_to", `${day} 23:59:59`);
-    url.searchParams.set("items_per_page", String(PAGE_SIZE));
-    url.searchParams.set("offset", String(page * PAGE_SIZE));
-    const res = await fetch(url, { headers: { "X-Api-Key": apiKey }, cache: "no-store" });
-    if (!res.ok) throw new Error(`FTC DNC ${res.status} for ${areaCode} ${day}`);
-    const body = (await res.json()) as { data?: DncRecord[] };
-    const items = body.data ?? [];
+    const items = await fetchPage(apiKey, {
+      area_code: areaCode,
+      created_date_from: `${day} 00:00:00`,
+      created_date_to: `${day} 23:59:59`,
+      offset: String(page * PAGE_SIZE),
+    });
     records.push(...items);
     // meta.record-total isn't reliable; a short page means we're done.
     if (items.length < PAGE_SIZE) return records;
   }
-  throw new Error(`FTC DNC: more than ${MAX_PAGES_PER_DAY} pages for ${areaCode} ${day}`);
+  throw new Error(`more than ${MAX_PAGES_PER_DAY} pages for ${areaCode} ${day}`);
 }
 
-async function ingestDnc(now: Date) {
-  const apiKey = process.env.FTC_API_KEY;
-  if (!apiKey) {
-    console.error("FTC_API_KEY missing; skipping Do Not Call ingestion");
-    return { days: 0, failed: 0, skipped: true };
-  }
+async function ingestMarkets(apiKey: string, today: string) {
   const admin = createAdminClient();
-  const { data: markets, error } = await admin.from("markets").select("area_codes").eq("active", true);
+  const { data: markets, error } = await admin.from("markets").select("state, area_codes").eq("active", true);
   if (error) throw new Error(`markets lookup failed: ${error.message}`);
-  const areaCodes = [...new Set((markets ?? []).flatMap((m) => m.area_codes as string[]))];
+  const stateByAreaCode = new Map<string, string>();
+  for (const m of markets ?? []) for (const code of m.area_codes as string[]) stateByAreaCode.set(code, m.state as string);
 
-  const today = easternDate(now);
   const { data: ingested, error: ingestedError } = await admin.rpc("dnc_ingested_days", {
     p_since: shiftDate(today, WINDOW_DAYS),
   });
@@ -49,9 +66,11 @@ async function ingestDnc(now: Date) {
 
   let days = 0;
   let failed = 0;
-  for (const { areaCode, day } of daysToFetch(today, areaCodes, ingested as { area_code: string; day: string }[], WINDOW_DAYS)) {
+  const work = daysToFetch(today, [...stateByAreaCode.keys()], ingested as { area_code: string; day: string }[], WINDOW_DAYS, REFRESH_DAYS);
+  for (const { areaCode, day } of work) {
     try {
-      const records = await fetchDncDay(apiKey, areaCode, day);
+      // Only complaints from the market's state (blank states are dropped).
+      const records = fromState(await fetchAreaCodeDay(apiKey, areaCode, day), STATE_NAMES[stateByAreaCode.get(areaCode)!]);
       const { error: saveError } = await admin.rpc("replace_dnc_day", {
         p_area_code: areaCode,
         p_day: day,
@@ -62,11 +81,123 @@ async function ingestDnc(now: Date) {
       days++;
     } catch (e) {
       // Leave the day unrecorded so the next run retries it.
-      console.error("DNC day failed", areaCode, day, e);
+      console.error("market day failed", areaCode, day, e);
       failed++;
+      if (e instanceof RateLimitedError) break;
     }
   }
-  return { days, failed, skipped: false };
+  return { days, failed };
+}
+
+/** Read one state's complaints newest-first until older than fromDay (or out of budget). */
+async function ingestState(
+  apiKey: string,
+  code: string,
+  fromDay: string,
+  toDay: string,
+  takeRequest: () => boolean,
+  onRateLimited: () => void,
+): Promise<{ days: number; complete: boolean; error?: unknown }> {
+  const name = STATE_NAMES[code];
+  const records: DncRecord[] = [];
+  let oldestSeen: string | null = null;
+  let reachedEnd = false;
+  let finished = false;
+  let fetchError: unknown;
+
+  for (let page = 0; page < MAX_STATE_PAGES; page++) {
+    if (!takeRequest()) break;
+    let items: DncRecord[];
+    try {
+      items = await fetchPage(apiKey, { state: name, offset: String(page * PAGE_SIZE) });
+    } catch (e) {
+      // Keep whatever days are already complete; the rest are refreshed next run.
+      if (e instanceof RateLimitedError) onRateLimited();
+      fetchError = e;
+      break;
+    }
+    records.push(...items);
+    for (const item of items) {
+      const day = recordDay(item);
+      if (day && (oldestSeen === null || day < oldestSeen)) oldestSeen = day;
+    }
+    if (items.length < PAGE_SIZE) {
+      reachedEnd = true;
+      finished = true;
+      break;
+    }
+    if (oldestSeen !== null && oldestSeen < fromDay) {
+      finished = true;
+      break;
+    }
+  }
+
+  const days = completeDays(fromDay, toDay, oldestSeen, reachedEnd);
+  if (days.length === 0) return { days: 0, complete: false, error: fetchError };
+
+  const byDay = bucketByDay(fromState(records, name), fromDay, toDay);
+  const admin = createAdminClient();
+  for (const day of days) {
+    const dayRecords = byDay.get(day) ?? [];
+    const { error } = await admin.rpc("replace_dnc_state_day", {
+      p_state: code,
+      p_day: day,
+      p_counts: aggregateDnc(dayRecords),
+      p_total: dayRecords.length,
+    });
+    if (error) throw new Error(`replace_dnc_state_day failed: ${error.message}`);
+  }
+  return { days: days.length, complete: finished, error: fetchError };
+}
+
+async function ingestStates(apiKey: string, today: string) {
+  const toDay = shiftDate(today, 1);
+  const fromDay = shiftDate(today, STATE_DEPTH_DAYS);
+  // Rotate the starting state daily so the same states aren't always last if the budget runs out.
+  const codes = Object.keys(STATE_NAMES);
+  const offset = Math.floor(Date.parse(`${today}T00:00:00Z`) / 86_400_000) % codes.length;
+  const queue = [...codes.slice(offset), ...codes.slice(0, offset)];
+
+  let requests = 0;
+  let rateLimited = false;
+  const takeRequest = () => (!rateLimited && requests < STATE_REQUEST_BUDGET ? (requests++, true) : false);
+  const onRateLimited = () => {
+    rateLimited = true;
+  };
+  let statesComplete = 0;
+  let statesPartial = 0;
+  let failed = 0;
+
+  async function worker() {
+    for (let code = queue.shift(); code; code = queue.shift()) {
+      try {
+        const result = await ingestState(apiKey, code, fromDay, toDay, takeRequest, onRateLimited);
+        if (result.complete) statesComplete++;
+        else statesPartial++;
+        if (result.error && !(result.error instanceof RateLimitedError)) {
+          console.error("state fetch failed", code, result.error);
+          failed++;
+        }
+      } catch (e) {
+        console.error("state failed", code, e);
+        failed++;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: STATE_CONCURRENCY }, worker));
+  return { statesComplete, statesPartial, failed, requests, rateLimited, totalStates: codes.length };
+}
+
+async function ingestDnc(now: Date) {
+  const apiKey = process.env.FTC_API_KEY;
+  if (!apiKey) {
+    console.error("FTC_API_KEY missing; skipping Do Not Call ingestion");
+    return { skipped: true as const };
+  }
+  const today = easternDate(now);
+  const markets = await ingestMarkets(apiKey, today);
+  const states = await ingestStates(apiKey, today);
+  return { skipped: false as const, markets, states };
 }
 
 async function ingestIc3() {
@@ -81,7 +212,7 @@ async function ingestIc3() {
   return { headlines: headlines.length };
 }
 
-/** Daily: FTC Do Not Call counts for each market's area codes, and IC3 headlines. */
+/** Daily: FTC Do Not Call counts (markets by area code, every state), and IC3 headlines. */
 export async function runIngest(now = new Date()) {
   const [dnc, ic3] = await Promise.allSettled([ingestDnc(now), ingestIc3()]);
   return {

@@ -51,3 +51,41 @@ export function daysToFetch(
   }
   return result;
 }
+
+/** YYYY-MM-DD from an FTC created-date ("2026-10-21 13:45:12"); null if malformed. */
+export function recordDay(record: DncRecord): string | null {
+  const value = String(record.attributes["created-date"] ?? "");
+  return /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null;
+}
+
+/** Keep only complaints whose consumer-state matches (blank states are dropped). */
+export function fromState(records: DncRecord[], stateFullName: string): DncRecord[] {
+  const want = stateFullName.toLowerCase();
+  return records.filter((r) => String(r.attributes["consumer-state"] ?? "").trim().toLowerCase() === want);
+}
+
+/**
+ * Per-state streams come back newest first. After reading some pages, a day is
+ * complete if we've seen anything older than it, or reached the end of the data.
+ * Returns the days in [fromDay, toDay] that are complete.
+ */
+export function completeDays(fromDay: string, toDay: string, oldestSeen: string | null, reachedEnd: boolean): string[] {
+  const days: string[] = [];
+  for (let d = toDay; d >= fromDay; d = shiftDate(d, 1)) {
+    if (reachedEnd || (oldestSeen !== null && d > oldestSeen)) days.push(d);
+  }
+  return days;
+}
+
+/** Group records by created day, keeping days within [fromDay, toDay]. */
+export function bucketByDay(records: DncRecord[], fromDay: string, toDay: string): Map<string, DncRecord[]> {
+  const byDay = new Map<string, DncRecord[]>();
+  for (const record of records) {
+    const day = recordDay(record);
+    if (!day || day < fromDay || day > toDay) continue;
+    const list = byDay.get(day) ?? [];
+    list.push(record);
+    byDay.set(day, list);
+  }
+  return byDay;
+}
