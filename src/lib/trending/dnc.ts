@@ -32,7 +32,8 @@ export function shiftDate(today: string, daysAgo: number): string {
 /**
  * Days to fetch per area code: anything missing in the last `windowDays`
  * (ending yesterday), plus the most recent `refreshDays` again since late
- * complaints can still arrive.
+ * complaints can still arrive. Ordered newest day first across all area codes,
+ * so every area code gets recent data before any one of them backfills.
  */
 export function daysToFetch(
   today: string,
@@ -43,9 +44,9 @@ export function daysToFetch(
 ): { areaCode: string; day: string }[] {
   const have = new Set(ingested.map((d) => `${d.area_code}|${d.day}`));
   const result: { areaCode: string; day: string }[] = [];
-  for (const areaCode of areaCodes) {
-    for (let ago = 1; ago <= windowDays; ago++) {
-      const day = shiftDate(today, ago);
+  for (let ago = 1; ago <= windowDays; ago++) {
+    const day = shiftDate(today, ago);
+    for (const areaCode of areaCodes) {
       if (ago <= refreshDays || !have.has(`${areaCode}|${day}`)) result.push({ areaCode, day });
     }
   }

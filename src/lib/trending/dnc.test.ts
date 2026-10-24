@@ -39,13 +39,15 @@ describe("daysToFetch", () => {
     expect(days).toEqual(["2026-10-22", "2026-10-21", "2026-10-19"]);
   });
 
-  it("handles several area codes independently", () => {
-    const days = daysToFetch("2026-10-23", ["845", "914"], [], 2, 1);
+  it("interleaves area codes newest day first, so one code can't starve the others", () => {
+    const days = daysToFetch("2026-10-23", ["845", "201", "551"], [], 2, 1);
     expect(days).toEqual([
       { areaCode: "845", day: "2026-10-22" },
+      { areaCode: "201", day: "2026-10-22" },
+      { areaCode: "551", day: "2026-10-22" },
       { areaCode: "845", day: "2026-10-21" },
-      { areaCode: "914", day: "2026-10-22" },
-      { areaCode: "914", day: "2026-10-21" },
+      { areaCode: "201", day: "2026-10-21" },
+      { areaCode: "551", day: "2026-10-21" },
     ]);
   });
 });

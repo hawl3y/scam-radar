@@ -18,7 +18,12 @@ export async function GET(request: NextRequest) {
   if ("error" in dnc) problems.push(`FTC: ${dnc.error}`);
   else if (dnc.skipped) problems.push("FTC: FTC_API_KEY is missing");
   else {
-    if (dnc.markets.failed > 0) problems.push(`FTC markets: ${dnc.markets.failed} day(s) failed (retried next run)`);
+    if (dnc.markets.days < dnc.markets.planned) {
+      problems.push(
+        `FTC markets: ${dnc.markets.days} of ${dnc.markets.planned} area-code days fetched` +
+          (dnc.markets.rateLimited ? " (rate limited; the rest are retried next run)" : ""),
+      );
+    }
     if (dnc.states.failed > 0) problems.push(`FTC states: ${dnc.states.failed} state(s) failed`);
     // Partial coverage is normal when the shared quota runs out; recent days are refreshed
     // on the next runs. Only alert when most states were missed.
