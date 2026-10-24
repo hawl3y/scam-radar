@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseEnv } from "./env";
 
-const PROTECTED_PATHS = ["/settings", "/report"];
+const PROTECTED_PATHS = ["/settings", "/report", "/admin"];
 
 const isProtected = (pathname: string) =>
   PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
