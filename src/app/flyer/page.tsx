@@ -18,14 +18,14 @@ export default async function FlyerPage() {
   const displayUrl = PUBLIC_SITE_URL.replace(/^https:\/\//, "");
 
   return (
-    <article className="mx-auto max-w-xl space-y-6 bg-white text-black print:max-w-none print:space-y-5">
+    <article className="mx-auto max-w-xl space-y-6 rounded-lg bg-white p-6 text-black sm:p-8 print:max-w-none print:space-y-4 print:rounded-none print:p-0">
       <PrintButton />
       <header className="space-y-2 text-center">
-        <h1 className="text-5xl font-bold">{SITE_NAME}</h1>
-        <p className="text-2xl">See what scams are going around near you, and warn your neighbors.</p>
+        <h1 className="text-4xl font-bold sm:text-5xl">{SITE_NAME}</h1>
+        <p className="text-xl sm:text-2xl">See what scams are going around near you, and warn your neighbors.</p>
       </header>
 
-      <ul className="space-y-3 text-xl">
+      <ul className="space-y-3 text-lg sm:text-xl print:space-y-2">
         <li>
           <strong>Got a strange text, call, or visit?</strong> Paste it in and see if neighbors reported the same thing.
         </li>
@@ -37,18 +37,18 @@ export default async function FlyerPage() {
         </li>
       </ul>
 
-      <div className="flex flex-col items-center gap-3 rounded-lg border-4 border-black p-6">
+      <div className="flex flex-col items-center gap-3 rounded-lg border-4 border-black p-4 sm:p-6 print:gap-2 print:p-4">
         <div
-          className="w-64 [&_svg]:h-auto [&_svg]:w-full"
+          className="w-56 sm:w-64 print:w-64 [&_svg]:h-auto [&_svg]:w-full"
           role="img"
           aria-label={`QR code for ${displayUrl}`}
           dangerouslySetInnerHTML={{ __html: svg }}
         />
-        <p className="text-2xl font-bold break-all">{displayUrl}</p>
+        <p className="text-center text-xl font-bold break-all sm:text-2xl">{displayUrl}</p>
         <p className="text-lg">Scan with your phone&apos;s camera, or type the address.</p>
       </div>
 
-      <p className="text-xl">
+      <p className="text-lg sm:text-xl">
         <strong>Free. No passwords.</strong> We hide phone numbers, names, and other personal details, and we never sell
         your information.
       </p>

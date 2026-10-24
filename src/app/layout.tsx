@@ -46,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </nav>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">{children}</main>
+        <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 print:max-w-none print:p-0">{children}</main>
         <footer className="border-t border-border print:hidden">
           <nav
             aria-label="About"
