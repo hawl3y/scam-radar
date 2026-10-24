@@ -22,12 +22,12 @@ async function LoginFormWithParams({ searchParams }: Pick<PageProps<"/login">, "
   return (
     <>
       {error && (
-        <p role="alert" className="text-danger">
-          That sign-in link didn&apos;t work. It may have expired or already been used. Please
-          request a new one.
+        <p role="alert" className="rounded-md border-2 border-danger bg-surface p-4">
+          That sign-in link didn&apos;t work. It may have expired, already been used, or been opened in a different
+          app than the one you signed in from.
         </p>
       )}
-      <LoginForm next={safeNext(typeof next === "string" ? next : undefined)} />
+      <LoginForm next={safeNext(typeof next === "string" ? next : undefined)} initialStep={error ? "code" : "email"} />
     </>
   );
 }
