@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { FeedList } from "@/components/feed-list";
+import { TrendingSection } from "@/components/trending-section";
 import { ZipForm } from "@/components/zip-form";
 import { getNearbyClusters } from "@/lib/clusters";
 import { getViewer } from "@/lib/viewer";
@@ -85,9 +86,12 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
         </Link>
       </p>
       {clusters.length === 0 ? (
-        <p className="rounded-md border-2 border-border p-4">
-          No scams reported near you yet. If you get a suspicious message, call, or visit, report it to warn your
-          neighbors.
+        <p>
+          No neighbors have reported scams near you yet. If you get a suspicious message, call, or visit,{" "}
+          <Link href="/report" className="underline">
+            report it
+          </Link>{" "}
+          to warn them.
         </p>
       ) : (
         <FeedList
@@ -98,6 +102,7 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
           serverLastVisit={viewer.lastFeedVisit}
         />
       )}
+      <TrendingSection zip={viewer.zip} />
     </div>
   );
 }
