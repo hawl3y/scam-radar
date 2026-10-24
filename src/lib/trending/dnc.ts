@@ -29,28 +29,67 @@ export function shiftDate(today: string, daysAgo: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+export type IngestStatus = { day: string; total: number; fetched_at: string };
+
+/**
+ * Fetched recently enough to skip on a repeat run. Days with zero complaints
+ * are never "done": zero usually means the FTC hasn't published that day yet.
+ */
+export function isFresh(row: IngestStatus | undefined, now: Date, freshHours: number): boolean {
+  if (!row || row.total <= 0) return false;
+  return now.getTime() - Date.parse(row.fetched_at) < freshHours * 3_600_000;
+}
+
 /**
  * Days to fetch per area code: anything missing in the last `windowDays`
- * (ending yesterday), plus the most recent `refreshDays` again since late
- * complaints can still arrive. Ordered newest day first across all area codes,
- * so every area code gets recent data before any one of them backfills.
+ * (ending yesterday), plus the most recent `refreshDays` again (late complaints
+ * can still arrive) unless they were fetched recently. Ordered newest day first
+ * across all area codes, so every area code gets recent data before any one of
+ * them backfills.
  */
 export function daysToFetch(
   today: string,
   areaCodes: string[],
-  ingested: { area_code: string; day: string }[],
+  ingested: ({ area_code: string } & Partial<IngestStatus> & { day: string })[],
   windowDays = 14,
   refreshDays = 2,
+  options: { now?: Date; freshHours?: number } = {},
 ): { areaCode: string; day: string }[] {
-  const have = new Set(ingested.map((d) => `${d.area_code}|${d.day}`));
+  const byKey = new Map(ingested.map((d) => [`${d.area_code}|${d.day}`, d]));
   const result: { areaCode: string; day: string }[] = [];
   for (let ago = 1; ago <= windowDays; ago++) {
     const day = shiftDate(today, ago);
     for (const areaCode of areaCodes) {
-      if (ago <= refreshDays || !have.has(`${areaCode}|${day}`)) result.push({ areaCode, day });
+      const row = byKey.get(`${areaCode}|${day}`);
+      const recent =
+        options.now !== undefined &&
+        options.freshHours !== undefined &&
+        row?.total !== undefined &&
+        row.fetched_at !== undefined &&
+        isFresh(row as IngestStatus, options.now, options.freshHours);
+      const refresh = ago <= refreshDays && !recent;
+      if (!row || refresh) result.push({ areaCode, day });
     }
   }
   return result;
+}
+
+/** States whose every day in [fromDay, toDay] is fresh can be skipped this run. */
+export function statesNeedingFetch(
+  states: string[],
+  status: ({ state: string } & IngestStatus)[],
+  fromDay: string,
+  toDay: string,
+  now: Date,
+  freshHours: number,
+): string[] {
+  const byKey = new Map(status.map((s) => [`${s.state}|${s.day}`, s]));
+  return states.filter((state) => {
+    for (let d = toDay; d >= fromDay; d = shiftDate(d, 1)) {
+      if (!isFresh(byKey.get(`${state}|${d}`), now, freshHours)) return true;
+    }
+    return false;
+  });
 }
 
 /** YYYY-MM-DD from an FTC created-date ("2026-10-21 13:45:12"); null if malformed. */
