@@ -14,13 +14,15 @@ const REASONS = [
 
 const smallButton = "inline-flex min-h-12 items-center rounded-md border-2 px-4 font-bold disabled:opacity-60";
 
-export function ExampleActions({ reportId, state }: { reportId: string; state: ExampleState | undefined }) {
+type Props = { reportId: string; clusterId: string; state: ExampleState | undefined };
+
+export function ExampleActions({ reportId, clusterId, state }: Props) {
   const [rateState, rateAction, rating] = useActionState<ExampleActionState, FormData>(
     rateReport.bind(null, reportId),
     {},
   );
   const [flagState, flagAction, flagging] = useActionState<ExampleActionState, FormData>(
-    flagReport.bind(null, reportId),
+    flagReport.bind(null, reportId, clusterId),
     {},
   );
 

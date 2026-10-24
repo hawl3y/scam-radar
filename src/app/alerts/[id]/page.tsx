@@ -24,7 +24,7 @@ export default function AlertPage({ params, searchParams }: PageProps<"/alerts/[
 }
 
 async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
-  const [{ id }, { zip, posted }] = await Promise.all([params, searchParams]);
+  const [{ id }, { zip, posted, hidden }] = await Promise.all([params, searchParams]);
   if (!UUID.test(id)) notFound();
 
   const viewer = await getViewer(zip);
@@ -35,7 +35,25 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
     getMyClusterStatus(id),
     getMyExampleState(id),
   ]);
-  if (!cluster) notFound();
+  const backHref = viewer.kind === "located" && !viewer.signedIn ? `/?zip=${viewer.zip}` : "/";
+  const hiddenNotice = hidden ? (
+    <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
+      Thanks, this report is hidden pending review.
+    </p>
+  ) : null;
+
+  if (!cluster) {
+    if (!hidden) notFound();
+    // The flag hid the only report neighbors could see in this alert.
+    return (
+      <section className="space-y-4">
+        {hiddenNotice}
+        <Link href={backHref} className="inline-flex min-h-12 items-center underline">
+          Back to scams near you
+        </Link>
+      </section>
+    );
+  }
 
   const type = SCAM_TYPES[cluster.scam_type];
   const distance = formatDistance(cluster.distance_miles, viewerZip !== null && viewerZip === cluster.nearest_zip);
@@ -43,6 +61,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
 
   return (
     <article className="space-y-6">
+      {hiddenNotice}
       {posted && (
         <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
           Thanks. Your report is posted and neighbors nearby can see it.
@@ -68,7 +87,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
               <blockquote className="whitespace-pre-wrap break-words rounded-md border-l-4 border-border bg-foreground/5 p-4">
                 {defang(example.description_redacted)}
               </blockquote>
-              <ExampleActions reportId={example.id} state={exampleState.get(example.id)} />
+              <ExampleActions reportId={example.id} clusterId={cluster.cluster_id} state={exampleState.get(example.id)} />
             </li>
           ))}
         </ul>
@@ -90,10 +109,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
         </p>
       </section>
 
-      <Link
-        href={viewer.kind === "located" && !viewer.signedIn ? `/?zip=${viewer.zip}` : "/"}
-        className="inline-flex min-h-12 items-center underline"
-      >
+      <Link href={backHref} className="inline-flex min-h-12 items-center underline">
         Back to scams near you
       </Link>
     </article>

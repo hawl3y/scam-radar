@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { sendInstantAlerts } from "@/lib/alerts/instant";
 import { notifyAdminsOfFlag } from "@/lib/alerts/admin-notify";
@@ -50,7 +51,12 @@ export async function rateReport(reportId: string, _prev: ExampleActionState, fo
 
 const FLAG_REASONS = ["personal_info", "private_person", "not_a_scam", "spam", "other"] as const;
 
-export async function flagReport(reportId: string, _prev: ExampleActionState, formData: FormData): Promise<ExampleActionState> {
+export async function flagReport(
+  reportId: string,
+  clusterId: string,
+  _prev: ExampleActionState,
+  formData: FormData,
+): Promise<ExampleActionState> {
   const { supabase, userId } = await signedInUser();
   if (!userId) return { error: "Please sign in first." };
 
@@ -69,6 +75,9 @@ export async function flagReport(reportId: string, _prev: ExampleActionState, fo
   if (data !== "already_flagged") {
     after(() => notifyAdminsOfFlag(reportId, reason, data === "hidden").catch((e) => console.error("flag notify failed", e)));
   }
+  // This flag hid the report. It may have been the cluster's last visible one,
+  // so let the page explain instead of refreshing into a 404.
+  if (data === "hidden") redirect(`/alerts/${clusterId}?hidden=1`);
   refresh();
   return {
     message:
