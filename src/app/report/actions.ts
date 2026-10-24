@@ -5,6 +5,8 @@ import { after } from "next/server";
 import { z } from "zod";
 import { sendInstantAlerts } from "@/lib/alerts/instant";
 import { assignCluster } from "@/lib/clusters";
+import { allowRequest } from "@/lib/rate-limit";
+import { RATE_LIMITED_MESSAGE, RATE_LIMITS } from "@/lib/rate-limits";
 import { redact, type RedactionKind } from "@/lib/redaction";
 import { reportDraftSchema, type ReportDraft } from "@/lib/report-schema";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -81,6 +83,10 @@ async function post(formData: FormData): Promise<ReportState> {
   const userId = auth?.claims?.sub;
   if (!userId) {
     return { step: "preview", version: Date.now(), draft: parsed.data, found: {}, errors: { form: ["Your session ended. Please sign in again."] } };
+  }
+
+  if (!(await allowRequest(RATE_LIMITS.reportHourly, userId)) || !(await allowRequest(RATE_LIMITS.reportDaily, userId))) {
+    return { step: "preview", version: Date.now(), draft: parsed.data, found: {}, errors: { form: [RATE_LIMITED_MESSAGE] } };
   }
 
   const { data, error } = await createAdminClient()
