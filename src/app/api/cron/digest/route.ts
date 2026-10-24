@@ -4,6 +4,7 @@ import { runDigest } from "@/lib/alerts/digest";
 import { easternDate } from "@/lib/alerts/policy";
 import { isCronRequest } from "@/lib/cron-auth";
 import { sendWeeklyPilotEmail } from "@/lib/pilot-report";
+import { SITE_NAME } from "@/lib/site";
 
 export const maxDuration = 300;
 
@@ -17,13 +18,13 @@ export async function GET(request: NextRequest) {
   try {
     result = await runDigest(now);
   } catch (e) {
-    await notifyAdmins("Scam Radar digest failed", String(e), `digest-error-${today}`).catch(() => {});
+    await notifyAdmins(`${SITE_NAME} digest failed`, String(e), `digest-error-${today}`).catch(() => {});
     throw e;
   }
   console.log("digest", result);
   if (result.failed > 0) {
     await notifyAdmins(
-      "Scam Radar digest had failures",
+      `${SITE_NAME} digest had failures`,
       `${result.failed} digest email(s) failed today and will be retried tomorrow.\n\n${JSON.stringify(result)}`,
       `digest-failed-${today}`,
     ).catch((e) => console.error("notify failed", e));

@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAdmins } from "./admin-notify";
 import { easternDate } from "./policy";
+import { SITE_NAME } from "@/lib/site";
 import { siteUrl } from "./send";
 
 // Resend's free plan allows 100 emails a day, and sign-in emails count too.
@@ -24,7 +25,7 @@ export async function alertEmailsRemaining(): Promise<number> {
 export async function warnBudgetReached(skipped: number, kind: "digest" | "instant") {
   const today = easternDate(new Date());
   await notifyAdmins(
-    "Scam Radar hit its daily email limit",
+    `${SITE_NAME} hit its daily email limit`,
     [
       `${skipped} ${kind} email${skipped === 1 ? "" : "s"} weren't sent today because alerts reached the daily budget of ${EMAIL_DAILY_BUDGET}.`,
       "",

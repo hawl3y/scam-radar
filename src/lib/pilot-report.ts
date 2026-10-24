@@ -2,6 +2,7 @@ import "server-only";
 import { notifyAdmins } from "@/lib/alerts/admin-notify";
 import { siteUrl } from "@/lib/alerts/send";
 import { evaluatePilot, type PilotSummary, type WeeklyMetrics } from "@/lib/pilot";
+import { SITE_NAME } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getPilotMetrics(weeks = 8): Promise<{ summary: PilotSummary; weeks: WeeklyMetrics[] }> {
@@ -34,5 +35,5 @@ export async function sendWeeklyPilotEmail() {
     "",
     `${siteUrl()}/admin/metrics`,
   ];
-  await notifyAdmins(`Scam Radar weekly summary: week of ${last.week_start}`, lines.join("\n"), `weekly-${last.week_start}`);
+  await notifyAdmins(`${SITE_NAME} weekly summary: week of ${last.week_start}`, lines.join("\n"), `weekly-${last.week_start}`);
 }

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { notifyAdmins } from "@/lib/alerts/admin-notify";
 import { easternDate } from "@/lib/alerts/policy";
 import { isCronRequest } from "@/lib/cron-auth";
+import { SITE_NAME } from "@/lib/site";
 import { runIngest } from "@/lib/trending/ingest";
 
 export const maxDuration = 300;
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
   ].filter(Boolean);
   if (problems.length > 0) {
     await notifyAdmins(
-      "Scam Radar data import had problems",
+      `${SITE_NAME} data import had problems`,
       problems.join("\n"),
       `ingest-${easternDate(new Date())}`,
     ).catch((e) => console.error("notify failed", e));
