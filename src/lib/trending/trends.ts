@@ -13,6 +13,7 @@ export type TrendRow = {
 export type Trend = {
   label: string;
   scamType: ScamType;
+  tip: string;
   thisWeek: number;
   /** e.g. "up from 160 the week before"; null when there isn't a full prior week to compare. */
   change: string | null;
@@ -35,13 +36,13 @@ export function buildTrends(rows: TrendRow[], max = 5): TrendSummary | null {
   const { week_ending, this_week_days, last_week_days } = rows[0];
   const comparable = this_week_days >= 7 && last_week_days >= 7;
 
-  const byLabel = new Map<string, { scamType: ScamType; thisWeek: number; lastWeek: number }>();
+  const byLabel = new Map<string, { scamType: ScamType; tip: string; thisWeek: number; lastWeek: number }>();
   let totalThisWeek = 0;
   for (const row of rows) {
     totalThisWeek += row.this_week;
     if (!isInformative(row.subject)) continue;
-    const { label, scamType } = subjectInfo(row.subject);
-    const entry = byLabel.get(label) ?? { scamType, thisWeek: 0, lastWeek: 0 };
+    const { label, scamType, tip } = subjectInfo(row.subject);
+    const entry = byLabel.get(label) ?? { scamType, tip, thisWeek: 0, lastWeek: 0 };
     entry.thisWeek += row.this_week;
     entry.lastWeek += row.last_week;
     byLabel.set(label, entry);
@@ -54,6 +55,7 @@ export function buildTrends(rows: TrendRow[], max = 5): TrendSummary | null {
     .map(([label, e]) => ({
       label,
       scamType: e.scamType,
+      tip: e.tip,
       thisWeek: e.thisWeek,
       change: comparable ? describeChange(e.thisWeek, e.lastWeek) : null,
     }));
