@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { FeedList } from "@/components/feed-list";
@@ -5,8 +6,17 @@ import { RecordUsage } from "@/components/record-usage";
 import { TrendingSection } from "@/components/trending-section";
 import { ZipForm } from "@/components/zip-form";
 import { getNearbyClusters } from "@/lib/clusters";
-import { SITE_DESCRIPTION } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 import { getViewer } from "@/lib/viewer";
+
+const HOME_TITLE = `${SITE_NAME}: ${SITE_TAGLINE}`;
+
+export const metadata: Metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_TITLE,
+  openGraph: { title: HOME_TITLE, description: HOME_TITLE, type: "website" },
+  twitter: { card: "summary", title: HOME_TITLE, description: HOME_TITLE },
+};
 
 // Mobile: compact buttons (still at least 44px tall); desktop: larger.
 const HERO_BUTTON =
@@ -22,7 +32,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
       {/* Hero: stacked on mobile; text left and actions right on wide screens. */}
       <div className="grid gap-5 rounded-2xl bg-tint p-4 sm:p-8 lg:grid-cols-2 lg:items-center lg:gap-12 lg:p-10">
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">Scams near you</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">{SITE_TAGLINE}</h1>
           <Suspense fallback={<p className="text-muted sm:text-lg">{SITE_DESCRIPTION}</p>}>
             <HeroText searchParams={searchParams} />
           </Suspense>

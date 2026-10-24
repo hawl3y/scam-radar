@@ -2,6 +2,8 @@
 // domain checklist" in PILOT.md for everything outside the code.
 // Display name. URLs, domains, and sender addresses still use scam-radar.
 export const SITE_NAME = "ByeBell";
+/** Home hero headline and link-preview line. */
+export const SITE_TAGLINE = "Ring the bell on scams";
 export const SITE_DESCRIPTION =
   "See what scams are going around near you, and report the ones you get.";
 
