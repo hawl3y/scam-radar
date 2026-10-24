@@ -1,0 +1,60 @@
+import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
+import QRCode from "qrcode";
+import { PUBLIC_SITE_URL, SITE_NAME, SUPPORT_EMAIL } from "@/lib/site";
+import { PrintButton } from "./print-button";
+
+export const metadata: Metadata = { title: "Flyer", robots: { index: false } };
+
+async function qrSvg(url: string) {
+  "use cache";
+  cacheLife("max");
+  return QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } });
+}
+
+// Print-friendly flyer for the library, senior center, and local groups.
+export default async function FlyerPage() {
+  const svg = await qrSvg(PUBLIC_SITE_URL);
+  const displayUrl = PUBLIC_SITE_URL.replace(/^https:\/\//, "");
+
+  return (
+    <article className="mx-auto max-w-xl space-y-6 bg-white text-black print:max-w-none print:space-y-5">
+      <PrintButton />
+      <header className="space-y-2 text-center">
+        <h1 className="text-5xl font-bold">{SITE_NAME}</h1>
+        <p className="text-2xl">See what scams are going around near you, and warn your neighbors.</p>
+      </header>
+
+      <ul className="space-y-3 text-xl">
+        <li>
+          <strong>Got a strange text, call, or visit?</strong> Paste it in and see if neighbors reported the same thing.
+        </li>
+        <li>
+          <strong>See what&apos;s going around</strong> in our area, with plain advice on what to do.
+        </li>
+        <li>
+          <strong>Get a heads-up by email</strong> when a scam starts spreading nearby.
+        </li>
+      </ul>
+
+      <div className="flex flex-col items-center gap-3 rounded-lg border-4 border-black p-6">
+        <div
+          className="w-64 [&_svg]:h-auto [&_svg]:w-full"
+          role="img"
+          aria-label={`QR code for ${displayUrl}`}
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+        <p className="text-2xl font-bold break-all">{displayUrl}</p>
+        <p className="text-lg">Scan with your phone&apos;s camera, or type the address.</p>
+      </div>
+
+      <p className="text-xl">
+        <strong>Free. No passwords.</strong> We hide phone numbers, names, and other personal details, and we never sell
+        your information.
+      </p>
+      <p className="text-lg">
+        A neighbor-run project. Not affiliated with the BBB, the FTC, or the police. Questions? {SUPPORT_EMAIL}
+      </p>
+    </article>
+  );
+}

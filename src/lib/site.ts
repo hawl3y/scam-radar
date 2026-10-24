@@ -8,3 +8,6 @@ export const SUPPORT_EMAIL = "support@joechawley.com";
 
 /** Next steps fallback when a market has no police_contact set (markets table). */
 export const DEFAULT_POLICE_CONTACT = "your local police non-emergency line";
+
+/** Production address, used on printed materials (QR code on /flyer). */
+export const PUBLIC_SITE_URL = "https://scam-radar.joechawley.com";
