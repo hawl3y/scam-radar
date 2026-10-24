@@ -3,7 +3,11 @@
 
 const envThreshold = Number(process.env.ALERT_INSTANT_THRESHOLD);
 
-/** Reports + "got this too" at which a cluster triggers instant emails. */
+/**
+ * Weighted support at which a cluster triggers instant emails. Each visible
+ * report or "got this too" counts 1 from established accounts and 0.5 from
+ * newer ones (see cluster_alert_signal in the database).
+ */
 export const INSTANT_THRESHOLD = Number.isInteger(envThreshold) && envThreshold > 0 ? envThreshold : 3;
 
 /** Max instant emails per person in 24 hours. Extra clusters go in the digest. */
@@ -15,8 +19,8 @@ export const DIGEST_WINDOW_HOURS = 36;
 /** Max clusters listed in one digest. */
 export const DIGEST_MAX_ITEMS = 10;
 
-export function isHot(reportCount: number, corroborationCount: number, threshold = INSTANT_THRESHOLD): boolean {
-  return reportCount + corroborationCount >= threshold;
+export function isHot(signal: number, threshold = INSTANT_THRESHOLD): boolean {
+  return Number.isFinite(signal) && signal >= threshold;
 }
 
 /** Recipients still under the daily instant limit. */

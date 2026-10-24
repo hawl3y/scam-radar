@@ -21,14 +21,17 @@ type Recipient = {
 export async function sendInstantAlerts(clusterId: string): Promise<{ sent: number }> {
   const admin = createAdminClient();
 
-  const [{ data: clusterRows, error }, { data: latestRows, error: latestError }] = await Promise.all([
-    admin.rpc("get_cluster", { p_cluster_id: clusterId }),
-    admin.rpc("cluster_examples", { p_cluster_id: clusterId, max_results: 1 }),
-  ]);
-  if (error || latestError) throw new Error(`cluster lookup failed: ${(error ?? latestError)?.message}`);
+  const [{ data: clusterRows, error }, { data: latestRows, error: latestError }, { data: signal, error: signalError }] =
+    await Promise.all([
+      admin.rpc("get_cluster", { p_cluster_id: clusterId }),
+      admin.rpc("cluster_examples", { p_cluster_id: clusterId, max_results: 1 }),
+      admin.rpc("cluster_alert_signal", { p_cluster_id: clusterId }),
+    ]);
+  const lookupError = error ?? latestError ?? signalError;
+  if (lookupError) throw new Error(`cluster lookup failed: ${lookupError.message}`);
   const cluster = (clusterRows as { scam_type: ScamType; report_count: number; corroboration_count: number }[])[0];
   const latest = (latestRows as { description_redacted: string; channel: Channel }[])[0];
-  if (!cluster || !latest || !isHot(cluster.report_count, cluster.corroboration_count)) return { sent: 0 };
+  if (!cluster || !latest || !isHot(Number(signal))) return { sent: 0 };
 
   const { data: recipients, error: recipientsError } = await admin.rpc("instant_alert_recipients", {
     p_cluster_id: clusterId,

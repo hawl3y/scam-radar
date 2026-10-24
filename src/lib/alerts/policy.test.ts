@@ -6,11 +6,13 @@ describe("isHot", () => {
     expect(INSTANT_THRESHOLD).toBe(3);
   });
 
-  it("counts reports plus corroborations", () => {
-    expect(isHot(2, 0)).toBe(false);
-    expect(isHot(3, 0)).toBe(true);
-    expect(isHot(1, 2)).toBe(true);
-    expect(isHot(2, 1, 4)).toBe(false);
+  it("compares weighted support to the threshold", () => {
+    expect(isHot(2.5)).toBe(false);
+    expect(isHot(3)).toBe(true);
+    // Six newer accounts (0.5 each) equal three established ones.
+    expect(isHot(6 * 0.5)).toBe(true);
+    expect(isHot(3.5, 4)).toBe(false);
+    expect(isHot(Number.NaN)).toBe(false);
   });
 });
 
