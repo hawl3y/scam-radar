@@ -4,6 +4,8 @@ Launch as **Scam Radar** at https://scam-radar.joechawley.com. The name is decid
 
 Status: Phases 0–6 are merged and live. Work through the launch checklist and open follow-ups, then start recruiting.
 
+**Latest (Oct 24):** unwanted-call trends are now state-correct. Markets match only zips in their own state (fixes NJ zips like 07430 showing NY data), **NJ Bergen** (201/551) was added, and every other state gets state-level trends. FTC ingest is paced to stay under the API's burst throttle and runs every 15 minutes on weekday afternoons via GitHub Actions, with the Vercel cron as backup. A daily coverage check emails you if trend data falls behind.
+
 ## Launch checklist
 
 - [ ] **Prod data is clean:** no test reports, accounts, or flags left in the prod project.
@@ -11,7 +13,7 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 - [ ] **Market settings** in prod (`public.markets`): **NY 845** (center 10989, 30 miles) and **NJ Bergen** (201 and 551, center 07601, 18 miles). Police contact and radius: see Open follow-ups.
 - [ ] **Legal pages reviewed** (see Open follow-ups).
 - [ ] **Cron jobs** show in Vercel → Settings → Cron Jobs (`/api/cron/ingest` 18:00 UTC backup, `/api/cron/digest` 12:00 UTC), and the last runs succeeded.
-- [ ] **GitHub Actions ingest schedule:** repo secret `PROD_CRON_SECRET` is set (Settings → Secrets and variables → Actions), and GitHub → Actions → **Ingest FTC data** shows weekday runs every 15 minutes, 17:00–20:45 UTC.
+- [x] **GitHub Actions ingest schedule:** repo secret `PROD_CRON_SECRET` is set (Settings → Secrets and variables → Actions), and a manual run of **Ingest FTC data** succeeded. Scheduled runs: every 15 minutes, 17:00–20:45 UTC, Mon–Fri.
 - [ ] **Env vars set in Production:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RATE_LIMIT_SALT`, `FTC_API_KEY`. Optional: `EMAIL_DAILY_BUDGET` (default 90), `ALERT_INSTANT_THRESHOLD` (default 3).
 - [ ] **Plan limits understood** (below).
 - [ ] **Seed 10–20 real local reports** through the normal report form (ideally posted by the neighbors themselves, with their permission), so the feed isn't empty on day one.
@@ -36,13 +38,14 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 | Resend | 100 emails/day (sign-in emails count) | Alerts stop at `EMAIL_DAILY_BUDGET` (default 90) so sign-in keeps working; you get an email; held-back clusters roll into a later digest | More than ~80 digest users, or the budget email arrives. Then raise `EMAIL_DAILY_BUDGET` |
 | Vercel Hobby | Non-commercial use; cron jobs run once a day | Fine for a non-commercial pilot | If the project becomes commercial |
 | Supabase Free | Database size and monthly active user caps; limited backups; pauses after inactivity | Check the usage page monthly | If backups matter, limits approach, or pauses recur |
-| api.data.gov | Hourly request limit per key | The daily import retries failed days | Unlikely at one or two area codes |
+| api.data.gov / FTC API | 20,000 requests/hour per key, plus a stricter burst throttle (~100 requests per run from Vercel; recovers in ~10 minutes) | Runs stop on a 429 and keep completed days; the next 15-minute run continues; the daily coverage check emails if data falls behind | Request a higher limit at api.data.gov if coverage stays low (the burst throttle may not be key-based) |
+| GitHub Actions | Free for public repos (private: 2,000 min/month on Free) | The ingest schedule uses at most ~1,760 billed min/month if the repo were private; typically far less | Only if the repo goes private and usage approaches the limit |
 
 ## Weekly routine
 
 1. Read the **Monday summary email** (last week's numbers and the targets), or open `/admin/metrics`.
 2. Review **`/admin`** for flagged reports and reports from limited accounts. Remove, dismiss, or restore.
-3. Act on any **"data import had problems"**, **"trend data is behind"**, **"digest had failures"**, or **"daily email limit"** emails.
+3. Act on any **"data import had problems"**, **"trend data is behind"**, **"digest had failures"**, or **"daily email limit"** emails. For trend problems, check GitHub → Actions → **Ingest FTC data** run logs (each shows the JSON result) and the Vercel cron logs.
 4. Note feedback from people in person or by email (footer "Send feedback" goes to `SUPPORT_EMAIL` in `src/lib/site.ts`).
 
 ## Success criteria (weeks 4–8)
