@@ -16,14 +16,24 @@ const REFRESH_DAYS = 3;
 // Per-state streams can't filter by date (the API ignores it), so we read each
 // state newest-first, this many days deep. No backfill beyond this.
 const STATE_DEPTH_DAYS = 3;
-// api.data.gov allows ~1,000 requests/hour per key; leave room for markets and retries.
-const STATE_REQUEST_BUDGET = 850;
-const STATE_CONCURRENCY = 3;
 const MAX_STATE_PAGES = 120;
+// The key's hourly quota is large, but a stricter burst throttle in front of the
+// API (it appears to be per IP, and Vercel shares IPs) rejects rapid requests and
+// takes ~10 minutes to recover. So: one request at a time, paced, and stop for
+// the day on a 429. Markets run first; states get whatever time is left.
+const PACE_MS = 400;
+const RUN_TIME_BUDGET_MS = 240_000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 class RateLimitedError extends Error {}
 
+let lastRequestAt = 0;
+
 async function fetchPage(apiKey: string, params: Record<string, string>): Promise<DncRecord[]> {
+  const wait = lastRequestAt + PACE_MS - Date.now();
+  if (wait > 0) await sleep(wait);
+  lastRequestAt = Date.now();
   const url = new URL(DNC_URL);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   url.searchParams.set("items_per_page", String(PAGE_SIZE));
@@ -52,7 +62,7 @@ async function fetchAreaCodeDay(apiKey: string, areaCode: string, day: string): 
   throw new Error(`more than ${MAX_PAGES_PER_DAY} pages for ${areaCode} ${day}`);
 }
 
-async function ingestMarkets(apiKey: string, today: string) {
+async function ingestMarkets(apiKey: string, today: string, deadline: number) {
   const admin = createAdminClient();
   const { data: markets, error } = await admin.from("markets").select("state, area_codes").eq("active", true);
   if (error) throw new Error(`markets lookup failed: ${error.message}`);
@@ -66,8 +76,10 @@ async function ingestMarkets(apiKey: string, today: string) {
 
   let days = 0;
   let failed = 0;
+  let rateLimited = false;
   const work = daysToFetch(today, [...stateByAreaCode.keys()], ingested as { area_code: string; day: string }[], WINDOW_DAYS, REFRESH_DAYS);
   for (const { areaCode, day } of work) {
+    if (Date.now() > deadline) break;
     try {
       // Only complaints from the market's state (blank states are dropped).
       const records = fromState(await fetchAreaCodeDay(apiKey, areaCode, day), STATE_NAMES[stateByAreaCode.get(areaCode)!]);
@@ -83,10 +95,13 @@ async function ingestMarkets(apiKey: string, today: string) {
       // Leave the day unrecorded so the next run retries it.
       console.error("market day failed", areaCode, day, e);
       failed++;
-      if (e instanceof RateLimitedError) break;
+      if (e instanceof RateLimitedError) {
+        rateLimited = true;
+        break;
+      }
     }
   }
-  return { days, failed };
+  return { days, failed, rateLimited, planned: work.length };
 }
 
 /** Read one state's complaints newest-first until older than fromDay (or out of budget). */
@@ -150,17 +165,19 @@ async function ingestState(
   return { days: days.length, complete: finished, error: fetchError };
 }
 
-async function ingestStates(apiKey: string, today: string) {
+async function ingestStates(apiKey: string, today: string, deadline: number, priority: string[]) {
   const toDay = shiftDate(today, 1);
   const fromDay = shiftDate(today, STATE_DEPTH_DAYS);
-  // Rotate the starting state daily so the same states aren't always last if the budget runs out.
+  // Market states first (their fallback matters most), then the rest, rotated
+  // daily so the same states aren't always last when time runs out.
   const codes = Object.keys(STATE_NAMES);
   const offset = Math.floor(Date.parse(`${today}T00:00:00Z`) / 86_400_000) % codes.length;
-  const queue = [...codes.slice(offset), ...codes.slice(0, offset)];
+  const rotated = [...codes.slice(offset), ...codes.slice(0, offset)];
+  const queue = [...new Set([...priority.filter((c) => c in STATE_NAMES), ...rotated])];
 
   let requests = 0;
   let rateLimited = false;
-  const takeRequest = () => (!rateLimited && requests < STATE_REQUEST_BUDGET ? (requests++, true) : false);
+  const takeRequest = () => (!rateLimited && Date.now() < deadline ? (requests++, true) : false);
   const onRateLimited = () => {
     rateLimited = true;
   };
@@ -168,23 +185,21 @@ async function ingestStates(apiKey: string, today: string) {
   let statesPartial = 0;
   let failed = 0;
 
-  async function worker() {
-    for (let code = queue.shift(); code; code = queue.shift()) {
-      try {
-        const result = await ingestState(apiKey, code, fromDay, toDay, takeRequest, onRateLimited);
-        if (result.complete) statesComplete++;
-        else statesPartial++;
-        if (result.error && !(result.error instanceof RateLimitedError)) {
-          console.error("state fetch failed", code, result.error);
-          failed++;
-        }
-      } catch (e) {
-        console.error("state failed", code, e);
+  for (const code of queue) {
+    if (rateLimited || Date.now() >= deadline) break;
+    try {
+      const result = await ingestState(apiKey, code, fromDay, toDay, takeRequest, onRateLimited);
+      if (result.complete) statesComplete++;
+      else statesPartial++;
+      if (result.error && !(result.error instanceof RateLimitedError)) {
+        console.error("state fetch failed", code, result.error);
         failed++;
       }
+    } catch (e) {
+      console.error("state failed", code, e);
+      failed++;
     }
   }
-  await Promise.all(Array.from({ length: STATE_CONCURRENCY }, worker));
   return { statesComplete, statesPartial, failed, requests, rateLimited, totalStates: codes.length };
 }
 
@@ -195,8 +210,14 @@ async function ingestDnc(now: Date) {
     return { skipped: true as const };
   }
   const today = easternDate(now);
-  const markets = await ingestMarkets(apiKey, today);
-  const states = await ingestStates(apiKey, today);
+  const deadline = Date.now() + RUN_TIME_BUDGET_MS;
+  const markets = await ingestMarkets(apiKey, today, deadline);
+  // If the markets already hit the throttle, don't spend more requests today.
+  const { data: marketRows } = await createAdminClient().from("markets").select("state").eq("active", true);
+  const priority = [...new Set((marketRows ?? []).map((m) => m.state as string))];
+  const states = markets.rateLimited
+    ? { statesComplete: 0, statesPartial: 0, failed: 0, requests: 0, rateLimited: true, totalStates: Object.keys(STATE_NAMES).length }
+    : await ingestStates(apiKey, today, deadline, priority);
   return { skipped: false as const, markets, states };
 }
 
