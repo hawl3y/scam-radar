@@ -25,7 +25,7 @@ export async function TrendingSection({ zip }: { zip: string }) {
           <p className="text-muted">{labels.intro}</p>
           <ul className="space-y-3">
             {scope.summary.trends.map((trend) => (
-              <li key={trend.label} className="rounded-md border-2 border-border p-4">
+              <li key={trend.label} className="rounded-md border-2 border-border bg-surface p-3 sm:p-4">
                 <p className="text-lg font-bold">{trend.label}</p>
                 <p>
                   {trend.thisWeek} {trend.thisWeek === 1 ? "report" : "reports"}

@@ -8,31 +8,37 @@ import { getNearbyClusters } from "@/lib/clusters";
 import { SITE_DESCRIPTION } from "@/lib/site";
 import { getViewer } from "@/lib/viewer";
 
+// Mobile: compact buttons (still at least 44px tall); desktop: larger.
+const HERO_BUTTON =
+  "inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-md px-1.5 text-center text-sm font-bold sm:min-h-12 sm:px-5 sm:text-lg lg:px-3 lg:text-base";
+
 export default function Home({ searchParams }: PageProps<"/">) {
   return (
-    <section className="space-y-10">
+    <section className="space-y-8 sm:space-y-10">
       <Suspense>
         <DeletedNotice searchParams={searchParams} />
       </Suspense>
 
-      <div className="space-y-5 rounded-2xl bg-tint p-6 sm:p-8">
-        <h1 className="text-3xl font-bold">Scams near you</h1>
-        <Suspense fallback={<p className="text-lg text-muted">{SITE_DESCRIPTION}</p>}>
-          <HeroLocation searchParams={searchParams} />
-        </Suspense>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/check"
-            className="inline-flex min-h-12 items-center rounded-md border-2 border-accent bg-surface px-5 text-lg font-bold"
-          >
-            Check a message
-          </Link>
-          <Link
-            href="/report"
-            className="inline-flex min-h-12 items-center rounded-md bg-accent px-5 text-lg font-bold text-accent-foreground"
-          >
-            Report a scam
-          </Link>
+      {/* Hero: stacked on mobile; text left and actions right on wide screens. */}
+      <div className="grid gap-5 rounded-2xl bg-tint p-4 sm:p-8 lg:grid-cols-2 lg:items-center lg:gap-12 lg:p-10">
+        <div className="space-y-3">
+          <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">Scams near you</h1>
+          <Suspense fallback={<p className="text-muted sm:text-lg">{SITE_DESCRIPTION}</p>}>
+            <HeroText searchParams={searchParams} />
+          </Suspense>
+        </div>
+        <div className="space-y-3">
+          <Suspense>
+            <HeroZip searchParams={searchParams} />
+          </Suspense>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <Link href="/check" className={`${HERO_BUTTON} border-2 border-accent bg-surface`}>
+              Check a message
+            </Link>
+            <Link href="/report" className={`${HERO_BUTTON} bg-accent text-accent-foreground`}>
+              Report a scam
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -47,22 +53,22 @@ async function DeletedNotice({ searchParams }: Pick<PageProps<"/">, "searchParam
   const { deleted } = await searchParams;
   if (!deleted) return null;
   return (
-    <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
+    <p role="status" className="rounded-md border-2 border-accent bg-surface p-4 font-bold">
       Your account and everything tied to it were deleted.
     </p>
   );
 }
 
-/** Inside the hero: the zip field, or where the feed is centered. */
-async function HeroLocation({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
+/** Hero left column: what this is, or where the feed is centered. */
+async function HeroText({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const { zip } = await searchParams;
   const viewer = await getViewer(zip);
 
   if (viewer.kind === "located") {
     return (
-      <p className="text-lg text-muted">
+      <p className="text-muted sm:text-lg">
         Within {viewer.radiusMiles} miles of {viewer.zip} ·{" "}
-        <Link href={viewer.signedIn ? "/settings" : "/"} className="underline">
+        <Link href={viewer.signedIn ? "/settings" : "/"} className="-my-3 inline-block py-3 underline">
           Change
         </Link>
       </p>
@@ -70,7 +76,7 @@ async function HeroLocation({ searchParams }: Pick<PageProps<"/">, "searchParams
   }
   if (viewer.signedIn) {
     return (
-      <p className="text-lg">
+      <p className="sm:text-lg">
         <Link href="/settings?welcome=1" className="underline">
           Add your zip code
         </Link>{" "}
@@ -79,16 +85,23 @@ async function HeroLocation({ searchParams }: Pick<PageProps<"/">, "searchParams
     );
   }
   return (
-    <div className="space-y-4">
-      <p className="text-lg text-muted">{SITE_DESCRIPTION}</p>
+    <div className="space-y-3">
+      <p className="text-muted sm:text-lg">{SITE_DESCRIPTION}</p>
       {viewer.unknownZip && (
         <p role="alert" className="text-danger">
           We don&apos;t recognize that zip code. Please check it and try again.
         </p>
       )}
-      <ZipForm defaultValue={viewer.unknownZip} />
     </div>
   );
+}
+
+/** Hero right column: the zip field, only for signed-out visitors without one. */
+async function HeroZip({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
+  const { zip } = await searchParams;
+  const viewer = await getViewer(zip);
+  if (viewer.kind !== "needs-zip" || viewer.signedIn) return null;
+  return <ZipForm defaultValue={viewer.unknownZip} />;
 }
 
 async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
@@ -203,7 +216,7 @@ function HowItWorks() {
       </h2>
       <ol className="grid gap-4 sm:grid-cols-3">
         {STEPS.map((step, i) => (
-          <li key={step.title} className="space-y-3 rounded-2xl bg-canvas p-5">
+          <li key={step.title} className="space-y-3 rounded-2xl bg-surface p-4 sm:p-5">
             <span className="inline-flex size-12 items-center justify-center rounded-md bg-tint text-accent">
               {step.icon}
             </span>
