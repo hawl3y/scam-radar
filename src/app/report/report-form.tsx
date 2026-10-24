@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { defang, type RedactionKind } from "@/lib/redaction";
 import { DESCRIPTION_MAX } from "@/lib/report-schema";
@@ -158,6 +159,13 @@ export function ReportForm({ defaultZip }: { defaultZip: string }) {
       </label>
 
       <FieldError messages={errors?.form} />
+      <p className="text-muted">
+        Please follow the{" "}
+        <Link href="/rules" className="underline">
+          community rules
+        </Link>
+        : no names of private people and no personal details.
+      </p>
       <button type="submit" name="intent" value="preview" disabled={pending} className={primaryButton}>
         {pending ? "Checking…" : "Preview"}
       </button>

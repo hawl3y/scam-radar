@@ -3,10 +3,9 @@
 import { z } from "zod";
 import { findMatchingClusters, type ClusterMatch } from "@/lib/clusters";
 import { allowRequest } from "@/lib/rate-limit";
+import { RATE_LIMITED_MESSAGE, RATE_LIMITS } from "@/lib/rate-limits";
 import { redact } from "@/lib/redaction";
 import { createClient } from "@/lib/supabase/server";
-
-const CHECKS_PER_HOUR = 20;
 
 const checkSchema = z.object({
   text: z
@@ -41,8 +40,8 @@ export async function check(_prev: CheckState, formData: FormData): Promise<Chec
     if (!data) return { status: "error", values, errors: { zip: ["We don't recognize that zip code."] } };
   }
 
-  if (!(await allowRequest("check", CHECKS_PER_HOUR, 3600))) {
-    return { status: "error", values, errors: { form: ["You've checked a lot of messages. Please try again in a bit."] } };
+  if (!(await allowRequest(RATE_LIMITS.check))) {
+    return { status: "error", values, errors: { form: [RATE_LIMITED_MESSAGE] } };
   }
 
   // Match on redacted text only. Nothing here is stored.

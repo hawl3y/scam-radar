@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getCluster, getClusterExamples, getMyClusterStatus } from "@/lib/clusters";
+import { getCluster, getClusterExamples, getMyClusterStatus, getMyExampleState } from "@/lib/clusters";
 import { crowdLabel } from "@/lib/crowd";
 import { formatDistance, formatTimeAgo } from "@/lib/format";
 import { defang } from "@/lib/redaction";
 import { CHANNELS, SCAM_TYPES } from "@/lib/scam-types";
 import { getViewer } from "@/lib/viewer";
 import { CorroborateButton } from "./corroborate-button";
+import { ExampleActions } from "./example-actions";
 
 export const metadata: Metadata = { title: "Scam alert" };
 
@@ -23,17 +24,36 @@ export default function AlertPage({ params, searchParams }: PageProps<"/alerts/[
 }
 
 async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
-  const [{ id }, { zip, posted }] = await Promise.all([params, searchParams]);
+  const [{ id }, { zip, posted, hidden }] = await Promise.all([params, searchParams]);
   if (!UUID.test(id)) notFound();
 
   const viewer = await getViewer(zip);
   const viewerZip = viewer.kind === "located" ? viewer.zip : null;
-  const [cluster, examples, status] = await Promise.all([
+  const [cluster, examples, status, exampleState] = await Promise.all([
     getCluster(id, viewerZip),
     getClusterExamples(id),
     getMyClusterStatus(id),
+    getMyExampleState(id),
   ]);
-  if (!cluster) notFound();
+  const backHref = viewer.kind === "located" && !viewer.signedIn ? `/?zip=${viewer.zip}` : "/";
+  const hiddenNotice = hidden ? (
+    <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
+      Thanks, this report is hidden pending review.
+    </p>
+  ) : null;
+
+  if (!cluster) {
+    if (!hidden) notFound();
+    // The flag hid the only report neighbors could see in this alert.
+    return (
+      <section className="space-y-4">
+        {hiddenNotice}
+        <Link href={backHref} className="inline-flex min-h-12 items-center underline">
+          Back to scams near you
+        </Link>
+      </section>
+    );
+  }
 
   const type = SCAM_TYPES[cluster.scam_type];
   const distance = formatDistance(cluster.distance_miles, viewerZip !== null && viewerZip === cluster.nearest_zip);
@@ -41,6 +61,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
 
   return (
     <article className="space-y-6">
+      {hiddenNotice}
       {posted && (
         <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
           Thanks. Your report is posted and neighbors nearby can see it.
@@ -59,13 +80,14 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
         <h2 className="text-xl font-bold">What it looked like</h2>
         <ul className="space-y-3">
           {examples.map((example) => (
-            <li key={example.id} className="space-y-1">
+            <li key={example.id} className="space-y-2">
               <p className="text-muted">
                 {CHANNELS[example.channel]} · {formatTimeAgo(new Date(example.created_at))}
               </p>
               <blockquote className="whitespace-pre-wrap break-words rounded-md border-l-4 border-border bg-foreground/5 p-4">
                 {defang(example.description_redacted)}
               </blockquote>
+              <ExampleActions reportId={example.id} clusterId={cluster.cluster_id} state={exampleState.get(example.id)} />
             </li>
           ))}
         </ul>
@@ -87,10 +109,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
         </p>
       </section>
 
-      <Link
-        href={viewer.kind === "located" && !viewer.signedIn ? `/?zip=${viewer.zip}` : "/"}
-        className="inline-flex min-h-12 items-center underline"
-      >
+      <Link href={backHref} className="inline-flex min-h-12 items-center underline">
         Back to scams near you
       </Link>
     </article>

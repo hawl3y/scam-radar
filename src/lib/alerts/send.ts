@@ -48,3 +48,9 @@ export async function sendAlertEmail(to: string, email: RenderedEmail, unsubscri
   );
   if (error) throw new Error(`Resend send failed: ${error.message}`);
 }
+
+/** Plain-text operational email (e.g. to admins). Throws on failure. */
+export async function sendPlainEmail(to: string[], subject: string, text: string, idempotencyKey: string) {
+  const { error } = await resend().emails.send({ from: FROM, to, subject, text }, { idempotencyKey });
+  if (error) throw new Error(`Resend send failed: ${error.message}`);
+}

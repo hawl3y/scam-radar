@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { login, type LoginState } from "./actions";
 
@@ -36,6 +37,17 @@ export function LoginForm({ next }: { next: string }) {
         <p className="text-muted">
           No password needed. We&apos;ll email you a sign-in link
           {SIGN_IN_CODE_ENABLED && " and a code"}.
+        </p>
+        <p className="text-muted">
+          By signing in you agree to the{" "}
+          <Link href="/terms" className="underline">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline">
+            Privacy policy
+          </Link>
+          .
         </p>
       </form>
     );

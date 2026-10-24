@@ -2,3 +2,6 @@
 export const SITE_NAME = "Scam Radar";
 export const SITE_DESCRIPTION =
   "See what scams are going around near you, and report the ones you get.";
+
+/** Contact for questions and data deletion requests. Used on all legal pages. */
+export const SUPPORT_EMAIL = "support@joechawley.com";

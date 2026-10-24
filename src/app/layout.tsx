@@ -47,6 +47,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </header>
         <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">{children}</main>
+        <footer className="border-t border-border">
+          <nav
+            aria-label="About"
+            className="mx-auto flex max-w-2xl flex-wrap gap-x-6 px-4 py-4 text-muted"
+          >
+            <Link href="/rules" className="inline-flex min-h-12 items-center underline">
+              Community rules
+            </Link>
+            <Link href="/terms" className="inline-flex min-h-12 items-center underline">
+              Terms
+            </Link>
+            <Link href="/privacy" className="inline-flex min-h-12 items-center underline">
+              Privacy
+            </Link>
+          </nav>
+        </footer>
         <ServiceWorkerRegistration />
       </body>
     </html>
