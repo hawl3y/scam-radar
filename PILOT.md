@@ -1,39 +1,46 @@
 # Scam Radar pilot
 
-Launch as **Scam Radar** at https://scam-radar.joechawley.com. The name is decided only if the pilot continues.
+Launch as **Scam Radar** at https://scam-radar.joechawley.com. The name is decided only if the pilot continues (see the rename checklist below).
+
+Status: Phases 0–6 are merged and live. Work through the launch checklist and open follow-ups, then start recruiting.
 
 ## Launch checklist
 
 - [ ] **Prod data is clean:** no test reports, accounts, or flags left in the prod project.
-- [ ] **Admin access:** you're in `public.admins` in prod (README → Trust and safety).
-- [ ] **Market settings** in prod (`public.markets`):
-  - [ ] Police contact for Next steps:
-        `update public.markets set police_contact = '...' where name = 'NY 845';`
-  - [ ] Radius covers the area you're recruiting in (default 30 miles from 10989; 845 reaches farther):
-        `update public.markets set radius_miles = 45 where name = 'NY 845';`
-- [ ] **Legal pages reviewed** by a lawyer: `/terms` (includes 18+), `/privacy`, `/rules`.
-- [ ] **Backups:** check what your Supabase plan includes for the prod project (Project Settings → Database → Backups).
-- [ ] **Cron jobs** show in Vercel → Settings → Cron Jobs (`/api/cron/ingest` 11:00 UTC, `/api/cron/digest` 12:00 UTC) and the last runs succeeded.
-- [ ] **Env vars set in Production:** Supabase keys, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RATE_LIMIT_SALT`, `FTC_API_KEY`.
+- [ ] **Admin access:** you're in `public.admins` in prod (README → Trust and safety). Flag emails and `/admin` depend on it.
+- [ ] **Market settings** in prod (`public.markets`): police contact and radius (see Open follow-ups).
+- [ ] **Legal pages reviewed** (see Open follow-ups).
+- [ ] **Cron jobs** show in Vercel → Settings → Cron Jobs (`/api/cron/ingest` 11:00 UTC, `/api/cron/digest` 12:00 UTC), and the last runs succeeded.
+- [ ] **Env vars set in Production:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RATE_LIMIT_SALT`, `FTC_API_KEY`. Optional: `EMAIL_DAILY_BUDGET` (default 90), `ALERT_INSTANT_THRESHOLD` (default 3).
 - [ ] **Plan limits understood** (below).
 - [ ] **Seed 10–20 real local reports** through the normal report form (ideally posted by the neighbors themselves, with their permission), so the feed isn't empty on day one.
-- [ ] **Print flyers** from `/flyer` for the library, senior center, and local groups.
+- [ ] **Print flyers** from `/flyer` (one US Letter page; the QR code always points to the production URL).
+
+## Open follow-ups
+
+- [ ] **Lawyer review** of `/terms` (includes 18+), `/privacy`, and `/rules` before recruiting beyond friends and neighbors.
+- [ ] **Police contact** for Next steps (currently "your local police non-emergency line"):
+      `update public.markets set police_contact = 'the … Police non-emergency line at (…) …' where name = 'NY 845';`
+- [ ] **Radius decision:** the NY 845 market covers 30 miles from 10989, but area code 845 reaches farther (e.g. Middletown, Poughkeepsie). To cover more of it:
+      `update public.markets set radius_miles = 45 where name = 'NY 845';`
+- [ ] **Supabase inactivity pauses:** free-plan projects pause after about a week of low activity. Prod should stay active (the daily cron jobs query it), but the **dev** project can pause between work sessions, and previews then fail until it's restored. Restore from the Supabase dashboard, or upgrade if pauses become a problem.
+- [ ] **Resend free-tier limit:** 100 emails a day including sign-in emails. Alerts stop at `EMAIL_DAILY_BUDGET` (90) and you get a "daily email limit" email. If that happens, or digest users pass ~80, upgrade Resend and raise `EMAIL_DAILY_BUDGET` in Vercel.
 
 ## Plan limits
 
 | Service | Free plan limit | What happens | When to upgrade |
 |---|---|---|---|
-| Resend | 100 emails/day (sign-in emails count) | Alerts stop at `EMAIL_DAILY_BUDGET` (default 90) so sign-in keeps working; you get an email; held-back clusters roll into a later digest | More than ~80 digest users, or the budget email arrives. Then raise `EMAIL_DAILY_BUDGET` in Vercel |
+| Resend | 100 emails/day (sign-in emails count) | Alerts stop at `EMAIL_DAILY_BUDGET` (default 90) so sign-in keeps working; you get an email; held-back clusters roll into a later digest | More than ~80 digest users, or the budget email arrives. Then raise `EMAIL_DAILY_BUDGET` |
 | Vercel Hobby | Non-commercial use; cron jobs run once a day | Fine for a non-commercial pilot | If the project becomes commercial |
-| Supabase Free | Database size and monthly active users caps; limited backups | Check the usage page monthly | If backups matter or limits approach |
+| Supabase Free | Database size and monthly active user caps; limited backups; pauses after inactivity | Check the usage page monthly | If backups matter, limits approach, or pauses recur |
 | api.data.gov | Hourly request limit per key | The daily import retries failed days | Unlikely at one or two area codes |
 
 ## Weekly routine
 
-1. Read the **Monday summary email** (metrics + targets).
-2. Review **`/admin`** for flagged reports. Remove or dismiss.
-3. Check for any **"data import had problems"**, **"digest had failures"**, or **"daily email limit"** emails and act on them.
-4. Note anything people tell you in person or by email (Send feedback → `support@` address in `src/lib/site.ts`).
+1. Read the **Monday summary email** (last week's numbers and the targets), or open `/admin/metrics`.
+2. Review **`/admin`** for flagged reports and reports from limited accounts. Remove, dismiss, or restore.
+3. Act on any **"data import had problems"**, **"digest had failures"**, or **"daily email limit"** emails.
+4. Note feedback from people in person or by email (footer "Send feedback" goes to `SUPPORT_EMAIL` in `src/lib/site.ts`).
 
 ## Success criteria (weeks 4–8)
 
@@ -48,3 +55,43 @@ Shown on `/admin/metrics` and in the weekly email. Defined in `src/lib/pilot.ts`
 | Turned off emails | under 10% |
 
 After 4–8 weeks, decide: **continue** (most targets met), **adjust** (some met; change outreach, alerts, or matching, e.g. the AI options in brief §11), or **stop**.
+
+## Rename / new domain checklist
+
+Use this if the pilot continues and the app gets a permanent name or domain. Keep the old domain working during the switch: printed flyers, emailed alert links, and unsubscribe links all point to it.
+
+**1. Code** (one file, then a PR)
+- [ ] `src/lib/site.ts`: `SITE_NAME`, `PUBLIC_SITE_URL`, `ALERTS_FROM_EMAIL`, and `SUPPORT_EMAIL` if it changes. Page titles, the manifest, emails, legal pages, the flyer, and admin email subjects all read from here.
+- [ ] `supabase/templates/sign-in.html`: the name in the heading and the subject comment (then re-paste it in Supabase; step 4).
+- [ ] App icons if the logo changes: `public/icon-192.png`, `public/icon-512.png`, `public/icon-512-maskable.png`, `src/app/icon.png`, `src/app/apple-icon.png`.
+- [ ] Docs: `README.md`, `CLAUDE.md`, `PROJECT_BRIEF.md`, this file, and the comment in `.env.example`.
+- [ ] Optional, cosmetic: `package.json` `name`, `supabase/config.toml` `project_id`, the IC3 `User-Agent` in `src/lib/trending/ingest.ts`. Leave the `scam-radar:last-feed-visit` storage key in `src/components/feed-list.tsx` alone; changing it resets everyone's "new" labels.
+
+**2. Domain** (registrar/DNS, Vercel)
+- [ ] Vercel → Settings → Domains: add the new domain to **Production** and create the DNS record Vercel shows.
+- [ ] Keep the old domain attached and set it to **redirect** to the new one. Keep it for at least a year.
+
+**3. Sending email** (Resend and DNS)
+- [ ] Resend: add and verify the new sending domain (its SPF and DKIM records).
+- [ ] DNS: add a DMARC record for the new domain (e.g. `_dmarc.<new>`: `v=DMARC1; p=none;`).
+- [ ] Create new Resend API keys for the new domain (Preview and Production) and update `RESEND_API_KEY` in Vercel.
+
+**4. Supabase** (dev and prod)
+- [ ] Authentication → URL Configuration: **Site URL** and **Redirect URLs** to the new domain (keep the old one during the switch).
+- [ ] Authentication → Emails → SMTP Settings: sender email (e.g. `no-reply@<new>`) and sender name.
+- [ ] Authentication → Emails → Templates: re-paste `sign-in.html` into **Magic Link** and **Confirm signup**, and update the subject.
+
+**5. Vercel environment**
+- [ ] `NEXT_PUBLIC_SITE_URL` (Production) to the new URL; redeploy.
+- [ ] Keep `EMAIL_TOKEN_SECRET` unchanged so email preference and unsubscribe links in past emails stay valid (via the old-domain redirect).
+
+**6. People and materials**
+- [ ] Sign-ins are per domain, so users have to sign in again on the new domain. Say so in the next digest or on the home page.
+- [ ] Reprint flyers from `/flyer` (the QR code follows `PUBLIC_SITE_URL`).
+- [ ] Optional: rename the GitHub repo (then update the link in `CLAUDE.md`) and the Supabase/Vercel project names.
+
+**7. Verify on production**
+- [ ] A sign-in email arrives from the new sender, and its link opens the new domain.
+- [ ] An alert email shows the new name in "From", its links use the new domain, and SPF, DKIM, and DMARC pass (Gmail → Show original).
+- [ ] An old-domain link (e.g. an old alert email) redirects to the same page on the new domain.
+- [ ] The flyer QR code scans to the new domain, and a shared alert link previews with the new name.
