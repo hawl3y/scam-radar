@@ -34,8 +34,13 @@ export default function Home({ searchParams }: PageProps<"/">) {
 }
 
 async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
-  const { zip } = await searchParams;
+  const { zip, deleted } = await searchParams;
   const viewer = await getViewer(zip);
+  const deletedNotice = deleted ? (
+    <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
+      Your account and everything tied to it were deleted.
+    </p>
+  ) : null;
 
   if (viewer.kind === "needs-zip") {
     if (viewer.signedIn) {
@@ -50,6 +55,7 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
     }
     return (
       <div className="space-y-4">
+        {deletedNotice}
         <p className="text-lg text-muted">{SITE_DESCRIPTION}</p>
         {viewer.unknownZip && (
           <p role="alert" className="text-danger">

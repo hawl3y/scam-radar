@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { DEFAULT_RADIUS, RADIUS_OPTIONS } from "@/lib/profile-schema";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteAccount } from "./delete-account";
 import { SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -45,6 +46,7 @@ async function Settings({ searchParams }: Pick<PageProps<"/settings">, "searchPa
           Sign out
         </button>
       </form>
+      <DeleteAccount />
     </>
   );
 }
