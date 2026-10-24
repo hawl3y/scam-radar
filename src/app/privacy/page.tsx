@@ -35,6 +35,14 @@ export default function PrivacyPage() {
         this too.&quot;
       </p>
 
+      <h2>Public data we show</h2>
+      <p>
+        &quot;Trending near you&quot; uses public Do Not Call complaint data from the U.S. Federal Trade Commission,
+        counted by area code and topic. We don&apos;t store the phone numbers or towns in that data. We also show
+        public scam warnings from the FBI&apos;s Internet Crime Complaint Center. None of this involves your personal
+        information.
+      </p>
+
       <h2>Services we use</h2>
       <ul>
         <li><strong>Supabase</strong> stores our database and handles sign-in.</li>

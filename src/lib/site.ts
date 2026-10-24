@@ -5,3 +5,6 @@ export const SITE_DESCRIPTION =
 
 /** Contact for questions and data deletion requests. Used on all legal pages. */
 export const SUPPORT_EMAIL = "support@joechawley.com";
+
+/** Next steps fallback when a market has no police_contact set (markets table). */
+export const DEFAULT_POLICE_CONTACT = "your local police non-emergency line";

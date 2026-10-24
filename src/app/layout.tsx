@@ -52,6 +52,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             aria-label="About"
             className="mx-auto flex max-w-2xl flex-wrap gap-x-6 px-4 py-4 text-muted"
           >
+            <Link href="/next-steps" className="inline-flex min-h-12 items-center underline">
+              If you&apos;ve been scammed
+            </Link>
             <Link href="/rules" className="inline-flex min-h-12 items-center underline">
               Community rules
             </Link>

@@ -85,9 +85,9 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 
 - Import the GitHub repo in Vercel (framework: Next.js; defaults are fine).
 - Environment variables (Project Settings → Environment Variables):
-  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`; `NEXT_PUBLIC_SITE_URL=https://scam-radar.joechawley.com`; plus its own `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, and `RESEND_API_KEY`
+  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`; `NEXT_PUBLIC_SITE_URL=https://scam-radar.joechawley.com`; plus its own `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`, and `FTC_API_KEY`
   - **Preview:** the dev project's values; `NEXT_PUBLIC_SITE_URL=https://scam-radar-git-<branch>-hawleys-projects.vercel.app` is fine for testing (links in preview emails need Vercel sign-in); different random secrets
-  - Mark every secret (`SUPABASE_SECRET_KEY`, `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`) as **Sensitive**.
+  - Mark every secret (`SUPABASE_SECRET_KEY`, `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`, `FTC_API_KEY`) as **Sensitive**.
 - Every branch push gets a preview deploy; `main` deploys to production at https://scam-radar.joechawley.com (DNS: CNAME at DreamHost).
 - Preview deploys are behind Vercel Authentication (Deployment Protection). Sign in to Vercel to view them, including on a phone.
 
@@ -116,6 +116,23 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 - **Rate limits:** in `src/lib/rate-limits.ts`. `node scripts/check-rate-limit.mts` verifies the database limiter on the linked dev project.
 - **Account deletion:** Settings → Delete my account removes the user and cascades to their reports, corroborations, ratings, flags, and alert history.
 - **Legal pages:** `/terms`, `/privacy`, `/rules`. The contact address is `SUPPORT_EMAIL` in `src/lib/site.ts`. Update `/privacy` whenever data collection or service providers change.
+
+## Trending near you (public data)
+
+- **Sources:** FTC Do Not Call complaints API (`api.ftc.gov/v0/dnc-complaints`, needs `FTC_API_KEY` from [api.data.gov](https://api.data.gov/signup)) and the FBI IC3 announcements feed (`ic3.gov/PSA/RSS`, filtered to scam/fraud items). FTC content is public domain; show attribution and never imply endorsement. **BBB Scam Tracker is link-only**: its terms prohibit aggregation.
+- **Privacy:** only daily counts per area code and subject are stored (`dnc_daily_counts`). Phone numbers and cities from the FTC data are dropped during ingestion.
+- **Ingestion:** Vercel Cron calls `/api/cron/ingest` at 11:00 UTC. It fills any missing days in the last 14 and always re-fetches the last 2. Run it by hand like the digest:
+  ```sh
+  curl -H "Authorization: Bearer $CRON_SECRET" https://<url>/api/cron/ingest
+  ```
+- **Markets:** areas with "Trending near you" live in the `markets` table (state, area codes, center zip, radius, police contact). Add or change them in Supabase **SQL Editor**; no code change or deploy needed, and the next ingest picks up new area codes:
+  ```sql
+  insert into public.markets (name, state, area_codes, center_zip, radius_miles)
+  values ('NY 914', 'NY', '{914}', '10601', 25);
+
+  -- Police contact shown on /next-steps (null = "your local police non-emergency line"):
+  update public.markets set police_contact = 'the Town Police non-emergency line at (555) 555-0100' where name = 'NY 845';
+  ```
 
 ## Making changes
 
