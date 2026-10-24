@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { SITE_DESCRIPTION, SITE_NAME, SUPPORT_EMAIL } from "@/lib/site";
 import "./globals.css";
@@ -30,8 +31,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col font-sans">
         <header className="border-b border-border print:hidden">
           <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-x-4 px-4 py-3">
-            <Link href="/" className="text-xl font-bold">
-              {SITE_NAME}
+            <Link href="/" className="inline-flex min-h-12 items-center">
+              <Logo className="h-9 w-auto" />
             </Link>
             <nav className="flex flex-wrap gap-x-4">
               <Link href="/check" className="inline-flex min-h-12 items-center underline">
