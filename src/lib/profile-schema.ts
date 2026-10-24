@@ -11,4 +11,5 @@ export const profileSettingsSchema = z.object({
   radiusMiles: z.coerce
     .number()
     .refine((n) => (RADIUS_OPTIONS as readonly number[]).includes(n), "Choose a distance."),
+  alertMode: z.enum(["digest", "instant", "off"], "Choose how we should email you."),
 });

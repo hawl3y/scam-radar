@@ -1,7 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
+import { sendInstantAlerts } from "@/lib/alerts/instant";
 import { assignCluster } from "@/lib/clusters";
 import { redact, type RedactionKind } from "@/lib/redaction";
 import { reportDraftSchema, type ReportDraft } from "@/lib/report-schema";
@@ -106,6 +108,10 @@ async function post(formData: FormData): Promise<ReportState> {
     console.error("cluster assignment failed", e);
   }
 
+  if (clusterId) {
+    const id = clusterId;
+    after(() => sendInstantAlerts(id).catch((e) => console.error("instant alerts failed", e)));
+  }
   redirect(clusterId ? `/alerts/${clusterId}?posted=1` : "/");
 }
 

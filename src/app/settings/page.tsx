@@ -24,7 +24,7 @@ async function Settings({ searchParams }: Pick<PageProps<"/settings">, "searchPa
   if (!auth?.claims) redirect("/login?next=/settings");
 
   const [{ data: profile }, { welcome }] = await Promise.all([
-    supabase.from("profiles").select("home_zip, radius_miles").maybeSingle(),
+    supabase.from("profiles").select("home_zip, radius_miles, alert_mode").maybeSingle(),
     searchParams,
   ]);
   const radius = (RADIUS_OPTIONS as readonly number[]).includes(profile?.radius_miles ?? NaN)
@@ -37,6 +37,7 @@ async function Settings({ searchParams }: Pick<PageProps<"/settings">, "searchPa
       <SettingsForm
         homeZip={profile?.home_zip ?? ""}
         radiusMiles={radius}
+        alertMode={profile?.alert_mode ?? "digest"}
         welcome={Boolean(welcome)}
       />
       <form action="/auth/signout" method="post">

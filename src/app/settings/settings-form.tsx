@@ -1,16 +1,19 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { AlertModeOptions } from "@/components/alert-mode-options";
+import type { AlertMode } from "@/lib/alerts/preferences";
 import { RADIUS_OPTIONS } from "@/lib/profile-schema";
 import { saveSettings, type SettingsState } from "./actions";
 
-type Props = { homeZip: string; radiusMiles: number; welcome: boolean };
+type Props = { homeZip: string; radiusMiles: number; alertMode: AlertMode; welcome: boolean };
 
-export function SettingsForm({ homeZip, radiusMiles, welcome }: Props) {
+export function SettingsForm({ homeZip, radiusMiles, alertMode, welcome }: Props) {
   // Controlled inputs: React resets uncontrolled forms after an action, which
   // would put back the values the page first loaded with.
   const [zip, setZip] = useState(homeZip);
   const [radius, setRadius] = useState(radiusMiles);
+  const [mode, setMode] = useState<AlertMode>(alertMode);
   const [showWelcome, setShowWelcome] = useState(welcome);
 
   const [state, action, pending] = useActionState<SettingsState, FormData>(async (prev, formData) => {
@@ -68,6 +71,9 @@ export function SettingsForm({ homeZip, radiusMiles, welcome }: Props) {
         </div>
         {state.errors?.radiusMiles && <p className="text-danger">{state.errors.radiusMiles[0]}</p>}
       </fieldset>
+
+      <AlertModeOptions value={mode} onChange={setMode} />
+      {state.errors?.alertMode && <p className="text-danger">{state.errors.alertMode[0]}</p>}
 
       {state.errors?.form && (
         <p role="alert" className="text-danger">

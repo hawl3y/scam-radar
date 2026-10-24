@@ -24,7 +24,7 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS, Supabase (Postgres + P
    ```sh
    cp .env.example .env.local
    ```
-   Fill in the **dev** project's URL, publishable key, and secret key (Supabase Dashboard → Project Settings → API Keys), and set `RATE_LIMIT_SALT` to a random string (`openssl rand -hex 32`).
+   Fill in the **dev** project's URL, publishable key, and secret key (Supabase Dashboard → Project Settings → API Keys). Set `RATE_LIMIT_SALT`, `CRON_SECRET`, and `EMAIL_TOKEN_SECRET` to random strings (`openssl rand -hex 32`), and add a `RESEND_API_KEY` (see [Alerts](#alerts-email)).
 5. **Database:** link the dev project and apply migrations:
    ```sh
    supabase link --project-ref <dev-project-ref>
@@ -85,11 +85,23 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 
 - Import the GitHub repo in Vercel (framework: Next.js; defaults are fine).
 - Environment variables (Project Settings → Environment Variables):
-  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`, plus a `RATE_LIMIT_SALT`
-  - **Preview:** the dev project's values, plus a different `RATE_LIMIT_SALT`
-  - Mark `SUPABASE_SECRET_KEY` and `RATE_LIMIT_SALT` as **Sensitive**.
+  - **Production:** prod project's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`; `NEXT_PUBLIC_SITE_URL=https://scam-radar.joechawley.com`; plus its own `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, and `RESEND_API_KEY`
+  - **Preview:** the dev project's values; `NEXT_PUBLIC_SITE_URL=https://scam-radar-git-<branch>-hawleys-projects.vercel.app` is fine for testing (links in preview emails need Vercel sign-in); different random secrets
+  - Mark every secret (`SUPABASE_SECRET_KEY`, `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`) as **Sensitive**.
 - Every branch push gets a preview deploy; `main` deploys to production at https://scam-radar.joechawley.com (DNS: CNAME at DreamHost).
 - Preview deploys are behind Vercel Authentication (Deployment Protection). Sign in to Vercel to view them, including on a phone.
+
+## Alerts (email)
+
+- **Sending:** [Resend](https://resend.com) API, from `alerts@scam-radar.joechawley.com`. Create an API key with **Sending access** for the domain; use separate keys for Preview and Production. SPF and DKIM come from the Resend domain verification; DMARC is a TXT record at DreamHost (`_dmarc.scam-radar`, `v=DMARC1; p=none;`).
+- **Instant alerts:** sent right after a report or "I got this too" pushes a cluster to `ALERT_INSTANT_THRESHOLD` (default 3), to users in **instant** mode within their radius. Max 3 per person per day.
+- **Daily digest:** Vercel Cron calls `/api/cron/digest` at 12:00 UTC (8 am Eastern in summer, 7 am in winter). Crons only run on production. To run it on a preview:
+  ```sh
+  curl -H "Authorization: Bearer $CRON_SECRET" https://<preview-url>/api/cron/digest
+  ```
+  Previews are behind Vercel Authentication, so run that from a browser session or add a [protection bypass](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection) header. Re-running sends nothing new: one digest per person per Eastern day.
+- **No duplicates:** each email is recorded in `alerts_sent` before it's sent and released if sending fails.
+- **Unsubscribe:** every email has one-click unsubscribe headers and a signed link to `/email-preferences` that works without signing in.
 
 ## Making changes
 
