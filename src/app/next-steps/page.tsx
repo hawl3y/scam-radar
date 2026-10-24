@@ -36,7 +36,7 @@ const FIRST_STEPS = [
 
 export default function NextStepsPage({ searchParams }: PageProps<"/next-steps">) {
   return (
-    <article className="space-y-8">
+    <article className="max-w-3xl space-y-8">
       <header className="space-y-3">
         <h1 className="text-3xl font-bold">If you&apos;ve been scammed</h1>
         <p className="text-lg">

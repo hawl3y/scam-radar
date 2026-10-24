@@ -1,7 +1,9 @@
 // Name, domain, and email addresses live here. Renaming? See "Rename / new
 // domain checklist" in PILOT.md for everything outside the code.
-// Working title until the name is decided (only if the pilot continues).
-export const SITE_NAME = "Scam Radar";
+// Display name. URLs, domains, and sender addresses still use scam-radar.
+export const SITE_NAME = "ByeBell";
+/** Home hero headline and link-preview line. */
+export const SITE_TAGLINE = "Ring the bell on scams";
 export const SITE_DESCRIPTION =
   "See what scams are going around near you, and report the ones you get.";
 

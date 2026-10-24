@@ -22,7 +22,7 @@ export function ClusterCard({
     .join(" · ");
   return (
     <li>
-      <Link href={href} className="block space-y-1 rounded-md border-2 border-border p-4 hover:border-accent">
+      <Link href={href} className="block space-y-1 rounded-md border-2 border-border bg-surface p-3 hover:border-accent sm:p-4">
         <h3 className="text-lg font-bold">
           {isNew && (
             <span className="mr-2 rounded bg-accent px-2 py-0.5 text-base text-accent-foreground">New</span>

@@ -10,6 +10,14 @@
   --danger: #b91c1c;
 }
 
+/* Surfaces mixed from the theme tokens above (no new colors). */
+:root {
+  --canvas: color-mix(in srgb, var(--foreground) 4%, var(--background));
+  --surface: var(--background);
+  --tint: color-mix(in srgb, var(--accent) 8%, var(--background));
+  --footer: color-mix(in srgb, var(--foreground) 7%, var(--background));
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -19,6 +27,13 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-danger: var(--danger);
   --font-sans: var(--font-atkinson);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-tint: var(--tint);
+  --color-footer: var(--footer);
+  /* One corner radius for controls and cards; larger containers use rounded-2xl. */
+  --radius-md: 0.75rem;
+  --radius-lg: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +45,11 @@
     --accent: #93c5fd;
     --accent-foreground: #0b1220;
     --danger: #fca5a5;
+    /* In dark mode, content areas sit slightly lighter than the page. */
+    --canvas: var(--background);
+    --surface: color-mix(in srgb, var(--foreground) 6%, var(--background));
+    --tint: color-mix(in srgb, var(--accent) 14%, var(--background));
+    --footer: color-mix(in srgb, var(--foreground) 3%, var(--background));
   }
 }
 
@@ -39,7 +59,7 @@ html {
 }
 
 body {
-  background: var(--background);
+  background: var(--canvas);
   color: var(--foreground);
 }
 
@@ -57,5 +77,9 @@ body {
   html {
     /* The larger on-screen base size would push printed pages onto a second sheet. */
     font-size: 100%;
+  }
+
+  body {
+    background: #ffffff;
   }
 }

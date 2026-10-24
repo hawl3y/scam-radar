@@ -71,7 +71,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
     if (!hidden) notFound();
     // The flag hid the only report neighbors could see in this alert.
     return (
-      <section className="space-y-4">
+      <section className="max-w-3xl space-y-4">
         {emailVisit}
         {hiddenNotice}
         <Link href={backHref} className="inline-flex min-h-12 items-center underline">
@@ -86,7 +86,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
   const meta = [distance, `last reported ${formatTimeAgo(new Date(cluster.last_seen))}`].filter(Boolean).join(" · ");
 
   return (
-    <article className="space-y-6">
+    <article className="max-w-3xl space-y-6">
       {emailVisit}
       {hiddenNotice}
       {posted && (

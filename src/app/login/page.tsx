@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
-    <section className="space-y-6">
+    <section className="max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">Sign in</h1>
       <p>You need an account to report scams, confirm reports, and get alerts.</p>
       <Suspense>

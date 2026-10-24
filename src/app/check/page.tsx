@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Check a message" };
 
 export default function CheckPage({ searchParams }: PageProps<"/check">) {
   return (
-    <section className="space-y-6">
+    <section className="max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">Is this a scam?</h1>
       <p>Paste a text or email, or describe a call or visit. We&apos;ll look for similar reports from neighbors.</p>
       <Suspense fallback={<p>Loading…</p>}>
