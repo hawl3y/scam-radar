@@ -1,5 +1,7 @@
 # Local Scam Radar — Project Brief (MVP)
 
+> **Status (Oct 2026):** Phases 0–6 are built, merged, and live at https://scam-radar.joechawley.com. The pilot is starting; see `PILOT.md`. Decisions made during the build are in §10.
+>
 > Working title. This brief is the source of truth for the MVP. Read it fully before planning or writing code. When a decision here conflicts with a default you'd otherwise choose, follow this brief and flag the conflict.
 
 ## 1. What we're building
@@ -71,10 +73,10 @@ A mobile-friendly web app (PWA) that acts as a **local scam radar**. Residents r
 |---|---|---|
 | Framework | Next.js (App Router), TypeScript | Front end and API routes in one codebase |
 | Hosting / CI | Vercel + GitHub | Preview deploy per branch; production on `main` |
-| Database | Supabase Postgres | PostGIS for radius queries; pgvector for similarity |
+| Database | Supabase Postgres | PostGIS for radius queries; pgvector enabled but unused (reserved for §11) |
 | Auth | Supabase Auth, email magic link | No passwords |
-| Email | Resend or Postmark | Decide in Phase 3 |
-| Web push | Web Push API with VAPID keys | Optional channel |
+| Email | Resend | Sign-in emails (Supabase custom SMTP) and alerts |
+| Web push | Web Push API with VAPID keys | Deferred (§11) |
 | Scheduled jobs | Vercel Cron | Digests, public data ingestion |
 | Matching | Postgres `pg_trgm` text similarity | Clustering and "Check" matching. No AI in the MVP so far; see §11 |
 | Styling | Tailwind CSS | Mobile-first |
@@ -108,6 +110,8 @@ A mobile-friendly web app (PWA) that acts as a **local scam radar**. Residents r
 Each phase ends with a working deploy. Don't start the next phase until the "Done when" criteria pass.
 
 ### Phase 0 — Foundation
+**Status:** ✅ Complete (PR #1; CI/CD and automatic prod migrations in PRs #2–#3).
+
 - Repo, Vercel connection, preview deploys.
 - Supabase dev and prod projects; enable PostGIS and pgvector; migrations via Supabase CLI.
 - Next.js PWA scaffold: manifest, service worker, installable.
@@ -116,6 +120,8 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - **Done when:** PWA deployed, login works, profile saves, database connected in dev and prod.
 
 ### Phase 1 — Report and feed
+**Status:** ✅ Complete (PR #4).
+
 - Report form with validation.
 - Redaction step (phone numbers, emails, names, account/card numbers, street addresses) before saving. Unit tests for redaction.
 - Approximate location handling.
@@ -123,6 +129,8 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - **Done when:** a user reports a scam and a second test user within the radius sees it, redacted, with correct distance.
 
 ### Phase 2 — Check and corroborate
+**Status:** ✅ Complete (PR #5).
+
 - Text similarity on reports with Postgres `pg_trgm` (no AI). Matching sits behind database functions so embeddings can replace it later (§11).
 - "Check": paste text, return matching local clusters with fixed plain-English guidance and tips. Never claim certainty. Per-IP rate limit.
 - Clustering: new reports join an existing cluster when similar enough.
@@ -130,17 +138,21 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - **Done when:** a pasted message finds the matching cluster, and corroboration counts update correctly.
 
 ### Phase 3 — Alerts
+**Status:** ✅ Complete (PR #6). Web push and the home-screen icon badge were deferred (§11); "new near you" is a banner plus labels.
+
 - Alert preferences UI.
 - Daily digest via Vercel Cron.
 - Instant email when a local cluster crosses a configurable threshold.
 - Throttling and dedupe via `alerts_sent`.
 - "New near you" badge and banner.
-- Optional web push for home-screen users.
+- Optional web push for home-screen users. *(Deferred.)*
 - SPF, DKIM, DMARC configured on the sending domain.
 - Emails link to the alert in the app and never ask users to log in from the email.
 - **Done when:** test users receive correct digests and instant alerts in the inbox (not spam), with no duplicates.
 
 ### Phase 4 — Trust and safety
+**Status:** ✅ Complete (PR #7).
+
 - Reputation scoring (account age, corroborated reports, helpful ratings).
 - Helpful / not-helpful ratings.
 - Flagging and an admin takedown screen (owner-only role).
@@ -149,15 +161,17 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - **Done when:** flagged posts can be removed, low-reputation spam doesn't surface, and rate limits hold.
 
 ### Phase 5 — Trending near you
+**Status:** ✅ Complete (PRs #8–#9). FTC Do Not Call complaints and FBI IC3 announcements are ingested; FTC Consumer Alerts have no feed and were skipped; BBB Scam Tracker is link-only (its terms bar aggregation).
+
 - **First:** confirm what BBB and FTC data can legally be used. Don't scrape without confirming terms.
 - Ingestion job via Vercel Cron into `public_scams`.
 - "Trending near you" section.
 - "Next steps" pages (bank, local police, FTC ReportFraud, BBB Scam Tracker, IC3).
 - **Done when:** a new user in the test town sees a useful feed with zero local reports.
 
-> Phase 5 may move before Phase 3 if an empty feed hurts first impressions.
-
 ### Phase 6 — Pilot launch
+**Status:** 🟡 Engineering complete (PR #10); the 4–8 week pilot is starting. "Email opens" is measured as visits from email links (no open tracking). See `PILOT.md`.
+
 - Seed 10–20 real local reports.
 - Recruit early users (local groups, library, senior center, neighbors).
 - Privacy-respecting analytics: sign-ups, reports per week, corroboration rate, email opens, return visits.
@@ -172,16 +186,36 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - Plain-English UI copy. No jargon, no fear language.
 - Treat all user-submitted text as untrusted (sanitize output; never pass it as instructions to an LLM without clear separation).
 
-## 10. Open questions
+## 10. Decisions log
 
-- App name and domain
-- Email provider (Resend vs. Postmark)
-- Clustering similarity threshold and instant-alert threshold
-- Default alert radius
-- Location granularity (grid size vs. zip centroid)
-- BBB / FTC data access terms
-- Reputation formula details
+Settled during the build (the former open questions plus later decisions). Change them only with the owner.
 
-## 11. Future options
+| Topic | Decision |
+|---|---|
+| Name and domain | Launch as **Scam Radar** at scam-radar.joechawley.com. The name is decided **only if the pilot continues** (rename checklist in `PILOT.md`). |
+| Matching | Postgres `pg_trgm` text similarity, **no AI**. Join a cluster at score ≥ 0.45; Check shows matches at ≥ 0.32 (calibrated with `scripts/calibrate-matching.mts`). Clustering ignores scam type; 50-mile, 90-day window. |
+| Redaction | Rules only. The reporter sees and edits a redacted preview before posting; the server redacts again on post. Links are kept but always shown defanged and never clickable. |
+| Location | Zip code centers only (US Census ZCTA). Default radius 10 miles (choices 5, 10, 25). |
+| Email provider | **Resend**, for Supabase sign-in emails (custom SMTP) and alerts. Alert emails stop at `EMAIL_DAILY_BUDGET` (default 90/day) because of Resend's free-plan limit. |
+| Alerts | Daily digest by default; instant mode adds instant emails. Instant threshold: weighted support ≥ 3 (established accounts 1, newer 0.5); max 3 instant emails per person per day. Digest at 12:00 UTC. |
+| SMS | Not built (stays a non-goal). |
+| Web push | Deferred (§11). |
+| Reputation | +1/week of account age (max 4), +2 per report others joined or corroborated (max 10), ±1 per helpful/not-helpful rating (max +10), −5 per admin removal. **Limited below −2**: posts hidden from others and not counted toward alerts. |
+| Flags | Auto-hide a report at 3 flags from accounts in good standing, pending admin review. Ratings are private. |
+| Rate limits | Report 5/hour and 20/day; "I got this too" 30/hour; ratings 60/hour; flags 20/hour; Check 20/hour per IP. |
+| Public data | FTC Do Not Call API (stored as daily counts only; no phone numbers or cities) and FBI IC3 RSS. Areas are rows in the `markets` table (seeded NY / 845). |
+| Legal | Terms (18+), privacy policy, and community rules drafted; contact `support@joechawley.com`. Lawyer review pending before wide launch. |
+| Pilot metrics | First-party only: aggregate daily counts and signed-in activity days. No analytics providers, tracking cookies, or email open tracking. |
+| Pilot success criteria | 50+ sign-ups in the test area; 5+ reports/week by week 4; 30%+ alerts corroborated; 40%+ users returning in a later week; under 10% turning off emails. |
 
-- **AI redaction, embeddings, and generated "Check" answers**, if `pg_trgm` matching proves weak (e.g. paraphrased reports of the same scam don't cluster, or Check misses obvious matches). Only rules-redacted text would be sent to an AI provider.
+## 11. Future roadmap
+
+Not planned for the MVP. Revisit only if the pilot continues, and with the owner's approval (several are non-goals in §5).
+
+- **AI matching and redaction:** embeddings for clustering and Check (replacing the `pg_trgm` function bodies; pgvector is already enabled), an AI redaction pass after the rules, and generated plain-English Check answers. Trigger: paraphrased reports of the same scam don't cluster, or Check misses obvious matches. Only rules-redacted text would be sent to an AI provider.
+- **Web push** for home-screen users, plus the home-screen icon badge for "new near you".
+- **Renaming / new domain:** pick a permanent name and domain (checklist in `PILOT.md`).
+- **More areas:** add rows to `markets` (no code change); multi-region admin tooling stays a non-goal until needed.
+- **Sponsors, payments, or donations** (currently a non-goal).
+- **Native iOS/Android apps** (currently a non-goal).
+- **Small business tier** (currently a non-goal).

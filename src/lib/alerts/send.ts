@@ -1,9 +1,10 @@
 import "server-only";
 import { Resend } from "resend";
+import { ALERTS_FROM_EMAIL, SITE_NAME } from "@/lib/site";
 import type { RenderedEmail } from "./emails";
 import { createPrefsToken } from "./tokens";
 
-const FROM = "Scam Radar <alerts@scam-radar.joechawley.com>";
+const FROM = `${SITE_NAME} <${ALERTS_FROM_EMAIL}>`;
 
 export function siteUrl(): string {
   const url = process.env.NEXT_PUBLIC_SITE_URL;

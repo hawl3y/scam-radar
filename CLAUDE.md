@@ -1,5 +1,11 @@
 # CLAUDE.md — scam-radar
 
+## Current status (Oct 2026)
+- **Phases 0–6 are complete and merged.** The app is live at https://scam-radar.joechawley.com (Vercel + Supabase prod).
+- **The pilot is starting.** Next steps, open follow-ups, the weekly routine, and the rename checklist are in `PILOT.md`.
+- Phase statuses and every decision made during the build (matching, alerts, reputation, limits, pilot targets) are in `PROJECT_BRIEF.md` §8 and §10. Future work is §11; don't start it without the owner.
+- Name, domain, and sender emails are set in `src/lib/site.ts` (plus the outside-the-code places in `PILOT.md`).
+
 ## Start here
 1. Read `PROJECT_BRIEF.md` fully before planning or writing code. It is the source of truth.
 2. Work **one phase at a time** (see brief §8). Don't start a phase until the previous phase's "Done when" criteria pass.
