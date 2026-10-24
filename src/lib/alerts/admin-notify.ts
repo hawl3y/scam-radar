@@ -32,3 +32,11 @@ export async function notifyAdminsOfFlag(reportId: string, reason: string, hidde
   ].join("\n");
   await sendPlainEmail(to, subject, text, `flag-${reportId}-${reason}-${hidden ? "hidden" : "open"}`);
 }
+
+/** Operational email to every admin. `key` dedupes repeats (Resend idempotency, 24h). */
+export async function notifyAdmins(subject: string, text: string, key: string) {
+  const { data } = await createAdminClient().rpc("admin_emails");
+  const to = ((data as { email: string }[] | null) ?? []).map((e) => e.email);
+  if (to.length === 0) return;
+  await sendPlainEmail(to, subject, text, key);
+}
