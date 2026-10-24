@@ -34,6 +34,7 @@ describe("buildTrends", () => {
       "Tech support calls",
     ]);
     expect(summary.trends[1].change).toBe("up from 10 the week before");
+    expect(summary.trends[0].tip).toMatch(/upfront fee/);
   });
 
   it("skips the comparison without two full weeks of data", () => {

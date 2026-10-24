@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SCAM_TYPES } from "@/lib/scam-types";
 import { getHeadlines, getMarketForZip, getTrendSummary } from "@/lib/trending/read";
 
 const shortDate = (value: string) =>
@@ -37,7 +36,7 @@ export async function TrendingSection({ zip }: { zip: string }) {
                   {trend.thisWeek} {trend.thisWeek === 1 ? "report" : "reports"}
                   {trend.change ? `, ${trend.change}` : ""}
                 </p>
-                <p className="text-muted">{SCAM_TYPES[trend.scamType].tips[0]}</p>
+                <p className="text-muted">{trend.tip}</p>
               </li>
             ))}
           </ul>
