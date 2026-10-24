@@ -163,7 +163,7 @@ const ICON_PROPS = {
   strokeWidth: 2,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
-  className: "size-7",
+  className: "size-5",
   "aria-hidden": true,
 };
 
@@ -214,16 +214,18 @@ function HowItWorks() {
       <h2 id="how-it-works" className="text-2xl font-bold">
         How it works
       </h2>
-      <ol className="grid gap-4 sm:grid-cols-3">
+      <ol className="grid gap-3 sm:grid-cols-3 sm:gap-4">
         {STEPS.map((step, i) => (
-          <li key={step.title} className="space-y-3 rounded-2xl bg-surface p-4 sm:p-5">
-            <span className="inline-flex size-12 items-center justify-center rounded-md bg-tint text-accent">
-              {step.icon}
-            </span>
-            <h3 className="text-lg font-bold">
-              <span className="sr-only">Step {i + 1}: </span>
-              {step.title}
-            </h3>
+          <li key={step.title} className="space-y-1.5 rounded-2xl bg-surface p-3 sm:p-4">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-tint text-accent">
+                {step.icon}
+              </span>
+              <h3 className="text-lg font-bold leading-tight">
+                <span className="sr-only">Step {i + 1}: </span>
+                {step.title}
+              </h3>
+            </div>
             <p className="text-muted">{step.body}</p>
           </li>
         ))}
