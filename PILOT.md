@@ -8,9 +8,9 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 
 - [ ] **Prod data is clean:** no test reports, accounts, or flags left in the prod project.
 - [ ] **Admin access:** you're in `public.admins` in prod (README → Trust and safety). Flag emails and `/admin` depend on it.
-- [ ] **Market settings** in prod (`public.markets`): police contact and radius (see Open follow-ups).
+- [ ] **Market settings** in prod (`public.markets`): **NY 845** (center 10989, 30 miles) and **NJ Bergen** (201 and 551, center 07601, 18 miles). Police contact and radius: see Open follow-ups.
 - [ ] **Legal pages reviewed** (see Open follow-ups).
-- [ ] **Cron jobs** show in Vercel → Settings → Cron Jobs (`/api/cron/ingest` 11:00 UTC, `/api/cron/digest` 12:00 UTC), and the last runs succeeded.
+- [ ] **Cron jobs** show in Vercel → Settings → Cron Jobs (`/api/cron/ingest` 18:00 UTC, `/api/cron/digest` 12:00 UTC), and the last runs succeeded.
 - [ ] **Env vars set in Production:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RATE_LIMIT_SALT`, `FTC_API_KEY`. Optional: `EMAIL_DAILY_BUDGET` (default 90), `ALERT_INSTANT_THRESHOLD` (default 3).
 - [ ] **Plan limits understood** (below).
 - [ ] **Seed 10–20 real local reports** through the normal report form (ideally posted by the neighbors themselves, with their permission), so the feed isn't empty on day one.
@@ -19,11 +19,12 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 ## Open follow-ups
 
 - [ ] **Lawyer review** of `/terms` (includes 18+), `/privacy`, and `/rules` before recruiting beyond friends and neighbors.
-- [ ] **Police contact** for Next steps (currently "your local police non-emergency line"):
-      `update public.markets set police_contact = 'the … Police non-emergency line at (…) …' where name = 'NY 845';`
+- [ ] **Police contact** for Next steps, per market (currently "your local police non-emergency line"):
+      `update public.markets set police_contact = 'the … Police non-emergency line at (…) …' where name = 'NY 845';` (and `'NJ Bergen'`)
 - [ ] **Radius decision:** the NY 845 market covers 30 miles from 10989, but area code 845 reaches farther (e.g. Middletown, Poughkeepsie). To cover more of it:
       `update public.markets set radius_miles = 45 where name = 'NY 845';`
 - [ ] **Supabase inactivity pauses:** free-plan projects pause after about a week of low activity. Prod should stay active (the daily cron jobs query it), but the **dev** project can pause between work sessions, and previews then fail until it's restored. Restore from the Supabase dashboard, or upgrade if pauses become a problem.
+- [ ] **FTC data coverage:** state trends build up from the first ingest (no backfill), so most states show "N days of data so far" for the first week and comparisons after two. If the shared api.data.gov quota keeps cutting runs short, request a higher limit at api.data.gov (free).
 - [ ] **Resend free-tier limit:** 100 emails a day including sign-in emails. Alerts stop at `EMAIL_DAILY_BUDGET` (90) and you get a "daily email limit" email. If that happens, or digest users pass ~80, upgrade Resend and raise `EMAIL_DAILY_BUDGET` in Vercel.
 
 ## Plan limits

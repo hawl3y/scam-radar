@@ -19,7 +19,13 @@ export type Trend = {
   change: string | null;
 };
 
-export type TrendSummary = { weekEnding: string; totalThisWeek: number; trends: Trend[] };
+export type TrendSummary = {
+  weekEnding: string;
+  /** Days of data in the current window (7 once a full week is collected). */
+  daysThisWeek: number;
+  totalThisWeek: number;
+  trends: Trend[];
+};
 
 const SAME_BAND = 0.1;
 
@@ -60,5 +66,5 @@ export function buildTrends(rows: TrendRow[], max = 5): TrendSummary | null {
       change: comparable ? describeChange(e.thisWeek, e.lastWeek) : null,
     }));
 
-  return { weekEnding: week_ending, totalThisWeek, trends };
+  return { weekEnding: week_ending, daysThisWeek: this_week_days, totalThisWeek, trends };
 }

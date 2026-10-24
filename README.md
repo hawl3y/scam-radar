@@ -117,15 +117,20 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 - **Account deletion:** Settings → Delete my account removes the user and cascades to their reports, corroborations, ratings, flags, and alert history.
 - **Legal pages:** `/terms`, `/privacy`, `/rules`. The contact address is `SUPPORT_EMAIL` in `src/lib/site.ts`. Update `/privacy` whenever data collection or service providers change.
 
-## Trending near you (public data)
+## Unwanted-call trends (public data)
 
 - **Sources:** FTC Do Not Call complaints API (`api.ftc.gov/v0/dnc-complaints`, needs `FTC_API_KEY` from [api.data.gov](https://api.data.gov/signup)) and the FBI IC3 announcements feed (`ic3.gov/PSA/RSS`, filtered to scam/fraud items). FTC content is public domain; show attribution and never imply endorsement. **BBB Scam Tracker is link-only**: its terms prohibit aggregation.
-- **Privacy:** only daily counts per area code and subject are stored (`dnc_daily_counts`). Phone numbers and cities from the FTC data are dropped during ingestion.
-- **Ingestion:** Vercel Cron calls `/api/cron/ingest` at 11:00 UTC. It fills any missing days in the last 14 and always re-fetches the last 2. Run it by hand like the digest:
+- **Privacy:** only daily counts are stored: per market area code and subject (`dnc_daily_counts`) and per state and subject (`dnc_state_daily_counts`). Phone numbers and cities from the FTC data are dropped during ingestion.
+- **What the data means:** the complainant's state and their phone's area code, not where the caller is or the viewer's town. Labels say "reported in New Jersey (201 and 551 area codes)", never "near you". Complaints with no state listed (about 1 in 7) are excluded.
+- **What a visitor sees:** their market (same state as their zip **and** within the market's radius) if it has data; otherwise their state's trends; otherwise "No local trend data for your area yet" plus national FBI headlines. Zip states come from the Census ZCTA-to-county file (`zip_centroids.state`).
+- **Ingestion:** Vercel Cron calls `/api/cron/ingest` at **18:00 UTC**, after the FTC's weekday update (~noon Eastern). Run it by hand like the digest:
   ```sh
   curl -H "Authorization: Bearer $CRON_SECRET" https://<url>/api/cron/ingest
   ```
-- **Markets:** areas with "Trending near you" live in the `markets` table (state, area codes, center zip, radius, police contact). Add or change them in Supabase **SQL Editor**; no code change or deploy needed, and the next ingest picks up new area codes:
+  - **Markets:** area code + date queries (the API supports both together), limited to complaints from the market's state. Fills missing days in the last 14 and re-fetches the last 3.
+  - **States:** the API ignores date filters when filtering by state, so each state is read newest-first, 3 days deep, every run. There is no backfill beyond that; state trends say "N days of data so far" until a week is collected, and week-over-week comparisons appear after two weeks.
+  - **Rate limits:** the api.data.gov quota is shared and not always what its headers suggest. On a 429 the run stops making requests and keeps every fully read day; the starting state rotates daily and recent days are re-fetched, so coverage fills in. You're emailed only if fewer than half the states completed.
+- **Markets:** areas with area-code trends live in the `markets` table (state, area codes, center zip, radius, police contact). The center zip must be in the market's state. Add or change them in Supabase **SQL Editor**; no code change or deploy needed, and the next ingest picks up new area codes:
   ```sql
   insert into public.markets (name, state, area_codes, center_zip, radius_miles)
   values ('NY 914', 'NY', '{914}', '10601', 25);

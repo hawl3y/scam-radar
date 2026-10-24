@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateDnc, daysToFetch, shiftDate } from "./dnc";
+import { aggregateDnc, bucketByDay, completeDays, daysToFetch, fromState, recordDay, shiftDate } from "./dnc";
 
 describe("aggregateDnc", () => {
   const records = [
@@ -47,5 +47,43 @@ describe("daysToFetch", () => {
       { areaCode: "914", day: "2026-10-22" },
       { areaCode: "914", day: "2026-10-21" },
     ]);
+  });
+});
+
+
+describe("per-state stream helpers", () => {
+  const rec = (date: string, state = "New Jersey") => ({ attributes: { "created-date": date, "consumer-state": state } });
+
+  it("reads days and skips malformed dates", () => {
+    expect(recordDay(rec("2026-10-21 13:45:12"))).toBe("2026-10-21");
+    expect(recordDay(rec("20261235"))).toBeNull();
+    expect(recordDay(rec("11/14/2024"))).toBeNull();
+  });
+
+  it("keeps only the requested state and drops blank states", () => {
+    const records = [rec("2026-10-21 01:00:00"), rec("2026-10-21 01:00:00", "New York"), rec("2026-10-21 01:00:00", "")];
+    expect(fromState(records, "New Jersey")).toHaveLength(1);
+  });
+
+  it("buckets records by day within the window", () => {
+    const byDay = bucketByDay(
+      [rec("2026-10-22 09:00:00"), rec("2026-10-21 09:00:00"), rec("2026-10-21 08:00:00"), rec("2026-10-18 09:00:00")],
+      "2026-10-20",
+      "2026-10-22",
+    );
+    expect([...byDay.entries()].map(([d, r]) => [d, r.length])).toEqual([
+      ["2026-10-22", 1],
+      ["2026-10-21", 2],
+    ]);
+  });
+
+  it("marks a day complete only once something older has been seen", () => {
+    // Read down to 10-21: 10-22 and 10-23 are complete, 10-21 might continue on the next page.
+    expect(completeDays("2026-10-20", "2026-10-23", "2026-10-21", false)).toEqual(["2026-10-23", "2026-10-22"]);
+    expect(completeDays("2026-10-20", "2026-10-23", "2026-10-19", false)).toEqual([
+      "2026-10-23", "2026-10-22", "2026-10-21", "2026-10-20",
+    ]);
+    expect(completeDays("2026-10-20", "2026-10-21", null, true)).toEqual(["2026-10-21", "2026-10-20"]);
+    expect(completeDays("2026-10-20", "2026-10-21", null, false)).toEqual([]);
   });
 });
