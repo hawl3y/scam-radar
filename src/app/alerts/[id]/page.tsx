@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getCluster, getClusterExamples, getMyClusterStatus } from "@/lib/clusters";
+import { getCluster, getClusterExamples, getMyClusterStatus, getMyExampleState } from "@/lib/clusters";
 import { crowdLabel } from "@/lib/crowd";
 import { formatDistance, formatTimeAgo } from "@/lib/format";
 import { defang } from "@/lib/redaction";
 import { CHANNELS, SCAM_TYPES } from "@/lib/scam-types";
 import { getViewer } from "@/lib/viewer";
 import { CorroborateButton } from "./corroborate-button";
+import { ExampleActions } from "./example-actions";
 
 export const metadata: Metadata = { title: "Scam alert" };
 
@@ -28,10 +29,11 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
 
   const viewer = await getViewer(zip);
   const viewerZip = viewer.kind === "located" ? viewer.zip : null;
-  const [cluster, examples, status] = await Promise.all([
+  const [cluster, examples, status, exampleState] = await Promise.all([
     getCluster(id, viewerZip),
     getClusterExamples(id),
     getMyClusterStatus(id),
+    getMyExampleState(id),
   ]);
   if (!cluster) notFound();
 
@@ -59,13 +61,14 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
         <h2 className="text-xl font-bold">What it looked like</h2>
         <ul className="space-y-3">
           {examples.map((example) => (
-            <li key={example.id} className="space-y-1">
+            <li key={example.id} className="space-y-2">
               <p className="text-muted">
                 {CHANNELS[example.channel]} · {formatTimeAgo(new Date(example.created_at))}
               </p>
               <blockquote className="whitespace-pre-wrap break-words rounded-md border-l-4 border-border bg-foreground/5 p-4">
                 {defang(example.description_redacted)}
               </blockquote>
+              <ExampleActions reportId={example.id} state={exampleState.get(example.id)} />
             </li>
           ))}
         </ul>

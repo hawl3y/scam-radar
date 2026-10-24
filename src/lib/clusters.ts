@@ -113,3 +113,15 @@ export async function findMatchingClusters(redactedText: string, zip: string | n
   if (error) throw new Error(`match_clusters failed: ${error.message}`);
   return checkMatches(data as ClusterMatch[]).slice(0, 3);
 }
+
+export type ExampleState = { report_id: string; mine: boolean; my_rating: boolean | null; my_flagged: boolean };
+
+/** Signed-in viewer's rating/flag state for each example; empty when signed out. */
+export async function getMyExampleState(clusterId: string): Promise<Map<string, ExampleState>> {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  if (!auth?.claims) return new Map();
+  const { data, error } = await supabase.rpc("my_example_state", { p_cluster_id: clusterId });
+  if (error) throw new Error(`my_example_state failed: ${error.message}`);
+  return new Map((data as ExampleState[]).map((s) => [s.report_id, s]));
+}
