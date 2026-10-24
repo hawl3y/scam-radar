@@ -1,3 +1,5 @@
+import { SITE_NAME } from "@/lib/site";
+
 // ByeBell logo, recolored with the site theme tokens (accent / accent-foreground),
 // so it follows light and dark mode. Wordmark outlines: Nunito Black (OFL) with
 // straight "ll" bars, matching the original artwork.
@@ -21,7 +23,7 @@ function Mark() {
 }
 
 /** Full logo: icon plus "ByeBell" wordmark. */
-export function Logo({ className, title = "ByeBell" }: { className?: string; title?: string }) {
+export function Logo({ className, title = SITE_NAME }: { className?: string; title?: string }) {
   return (
     <svg viewBox="0 0 408 100" role="img" aria-label={title} className={className}>
       <Mark />
@@ -31,7 +33,7 @@ export function Logo({ className, title = "ByeBell" }: { className?: string; tit
 }
 
 /** Icon only. */
-export function LogoMark({ className, title = "ByeBell" }: { className?: string; title?: string }) {
+export function LogoMark({ className, title = SITE_NAME }: { className?: string; title?: string }) {
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={title} className={className}>
       <Mark />
