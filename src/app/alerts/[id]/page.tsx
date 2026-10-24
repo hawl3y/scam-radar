@@ -101,10 +101,10 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
           ))}
         </ul>
         <p>
-          If you lost money or shared personal details, call your bank right away and report it at{" "}
-          <a href="https://reportfraud.ftc.gov" className="underline" rel="noopener noreferrer">
-            ReportFraud.ftc.gov
-          </a>
+          Lost money or shared personal details?{" "}
+          <Link href="/next-steps" className="underline">
+            Here&apos;s what to do first
+          </Link>
           .
         </p>
       </section>

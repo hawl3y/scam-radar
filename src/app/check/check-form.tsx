@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { ClusterCard } from "@/components/cluster-card";
 import { GENERAL_WARNING_SIGNS, SCAM_TYPES } from "@/lib/scam-types";
@@ -67,6 +68,7 @@ function CheckResult({ state, signedIn }: { state: Extract<CheckState, { status:
           ))}
         </ul>
         <p>If it looks like a scam, report it so neighbors can watch for it.</p>
+        <NextStepsLink />
       </section>
     );
   }
@@ -83,6 +85,7 @@ function CheckResult({ state, signedIn }: { state: Extract<CheckState, { status:
           ))}
         </ul>
       </div>
+      <NextStepsLink />
       <ul className="space-y-4">
         {state.matches.map((match) => (
           <ClusterCard
@@ -94,5 +97,17 @@ function CheckResult({ state, signedIn }: { state: Extract<CheckState, { status:
         ))}
       </ul>
     </section>
+  );
+}
+
+function NextStepsLink() {
+  return (
+    <p>
+      Already paid or shared personal details?{" "}
+      <Link href="/next-steps" className="underline">
+        Here&apos;s what to do first
+      </Link>
+      .
+    </p>
   );
 }
