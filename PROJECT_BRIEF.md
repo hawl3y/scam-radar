@@ -161,7 +161,7 @@ Each phase ends with a working deploy. Don't start the next phase until the "Don
 - **Done when:** flagged posts can be removed, low-reputation spam doesn't surface, and rate limits hold.
 
 ### Phase 5 — Trending near you
-**Status:** ✅ Complete (PRs #8–#9). FTC Do Not Call complaints and FBI IC3 announcements are ingested; FTC Consumer Alerts have no feed and were skipped; BBB Scam Tracker is link-only (its terms bar aggregation).
+**Status:** ✅ Complete (PRs #8–#9; state-correct matching and state-level trends added after launch). FTC Do Not Call complaints and FBI IC3 announcements are ingested; FTC Consumer Alerts have no feed and were skipped; BBB Scam Tracker is link-only (its terms bar aggregation).
 
 - **First:** confirm what BBB and FTC data can legally be used. Don't scrape without confirming terms.
 - Ingestion job via Vercel Cron into `public_scams`.
@@ -203,7 +203,7 @@ Settled during the build (the former open questions plus later decisions). Chang
 | Reputation | +1/week of account age (max 4), +2 per report others joined or corroborated (max 10), ±1 per helpful/not-helpful rating (max +10), −5 per admin removal. **Limited below −2**: posts hidden from others and not counted toward alerts. |
 | Flags | Auto-hide a report at 3 flags from accounts in good standing, pending admin review. Ratings are private. |
 | Rate limits | Report 5/hour and 20/day; "I got this too" 30/hour; ratings 60/hour; flags 20/hour; Check 20/hour per IP. |
-| Public data | FTC Do Not Call API (stored as daily counts only; no phone numbers or cities) and FBI IC3 RSS. Areas are rows in the `markets` table (seeded NY / 845). |
+| Public data | FTC Do Not Call API (stored as daily counts only; no phone numbers or cities) and FBI IC3 RSS. Markets (rows in `markets`, seeded NY 845 and NJ Bergen 201/551) match zips in the **same state** within their radius. Every other state gets state-level trends (read newest-first, 3 days deep daily; no backfill). Labels name the state and area codes and never claim town-level precision; complaints without a state are excluded. Ingest runs at 18:00 UTC. |
 | Legal | Terms (18+), privacy policy, and community rules drafted; contact `support@joechawley.com`. Lawyer review pending before wide launch. |
 | Pilot metrics | First-party only: aggregate daily counts and signed-in activity days. No analytics providers, tracking cookies, or email open tracking. |
 | Pilot success criteria | 50+ sign-ups in the test area; 5+ reports/week by week 4; 30%+ alerts corroborated; 40%+ users returning in a later week; under 10% turning off emails. |
