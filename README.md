@@ -134,6 +134,10 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
   update public.markets set police_contact = 'the Town Police non-emergency line at (555) 555-0100' where name = 'NY 845';
   ```
 
+## Pilot (Phase 6)
+
+See [PILOT.md](PILOT.md) for the launch checklist, weekly routine, and success criteria. Metrics are first-party only: aggregate daily counts (`usage_daily`) and signed-in activity days (`user_activity_days`), shown at `/admin/metrics` and emailed to admins on Mondays. Alert emails stop at `EMAIL_DAILY_BUDGET` per day (default 90). The printable flyer is at `/flyer`.
+
 ## Making changes
 
 1. Branch from `main`: `git checkout -b <feature>`.
