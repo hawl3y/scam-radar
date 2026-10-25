@@ -34,16 +34,18 @@ describe("scopeLabels", () => {
   it("labels markets by state and area codes, not by town", () => {
     const labels = scopeLabels({ kind: "market", state: "NY", areaCodes: ["845"], summary: summary() });
     expect(labels.heading).toBe("Unwanted calls reported in New York (845 area code)");
-    expect(labels.intro).toBe(
-      "Reported to the FTC by people in New York with 845 phone numbers, in the 7 days through Oct 22: 192. The most common:",
+    expect(`${labels.count} ${labels.summary}`).toBe(
+      "192 calls reported to the FTC in the 7 days through Oct 22, by people in New York with 845 numbers.",
     );
-    expect(`${labels.heading} ${labels.intro}`).not.toMatch(/near you/i);
+    expect(`${labels.heading} ${labels.summary}`).not.toMatch(/near you/i);
   });
 
   it("labels states and partial weeks honestly", () => {
     const labels = scopeLabels({ kind: "state", state: "NJ", summary: summary(3, 1500) });
     expect(labels.heading).toBe("Unwanted calls reported in New Jersey");
-    expect(labels.intro).toContain("in the 3 days of data so far, through Oct 22: 1500");
+    expect(`${labels.count} ${labels.summary}`).toBe(
+      "1,500 calls reported to the FTC in the 3 days of data so far, through Oct 22, by people in New Jersey.",
+    );
   });
 
   it("joins several area codes", () => {
