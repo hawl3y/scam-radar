@@ -69,6 +69,22 @@ describe("redact: names", () => {
     expect(r("Your refund is ready.\nThanks,\nKevin")).toBe("Your refund is ready.\nThanks,\n[name]");
   });
 
+  it("redacts greeting + name anywhere in the text, not just at line start", () => {
+    expect(r("Text said: Hi Linda, your package is waiting")).toBe("Text said: Hi [name], your package is waiting");
+    expect(r("Pay the fee today. Hi Linda!")).toBe("Pay the fee today. Hi [name]!");
+    expect(r("Got this: Hello John Smith, this is your bank.")).toBe("Got this: Hello [name], this is your bank.");
+    expect(r("The email started with Dear Margaret: please confirm")).toBe("The email started with Dear [name]: please confirm");
+    expect(r("They wrote hey Sam. Call back now")).toBe("They wrote hey [name]. Call back now");
+    expect(r("It ended Good morning Pat, thanks")).toBe("It ended Good morning [name], thanks");
+  });
+
+  it("doesn't treat ordinary mid-sentence words as greetings", () => {
+    expect(r("I said hi Bob was there")).toBe("I said hi Bob was there");
+    expect(r("Text said: Dear Customer, your account is locked")).toBe("Text said: Dear Customer, your account is locked");
+    expect(r("then Hi there, click the link")).toBe("then Hi there, click the link");
+    expect(r("It said Hello Amazon Support, confirm now.")).toBe("It said Hello Amazon Support, confirm now.");
+  });
+
   it("leaves greetings and brands that aren't names", () => {
     expect(r("Dear Customer, your account is on hold")).toBe("Dear Customer, your account is on hold");
     expect(r("Hi there, this is Amazon Support")).toBe("Hi there, this is Amazon Support");

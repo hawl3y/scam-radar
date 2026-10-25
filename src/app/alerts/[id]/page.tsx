@@ -112,10 +112,9 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
         <p className="text-muted">{meta}</p>
       </header>
 
-      <div className="flex flex-wrap items-start gap-4">
-        <CorroborateButton clusterId={cluster.cluster_id} status={status} />
-        <ShareButton clusterId={cluster.cluster_id} title={type.label} />
-      </div>
+      <ShareButton clusterId={cluster.cluster_id} title={type.label} />
+
+      <CorroborateButton clusterId={cluster.cluster_id} status={status} />
 
       <section className="space-y-3">
         <h2 className="text-xl font-bold">What it looked like</h2>
@@ -148,6 +147,11 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
           </Link>
           .
         </p>
+      </section>
+
+      <section className="space-y-2" aria-label="Share this alert">
+        <p className="font-bold">Know someone who might get this?</p>
+        <ShareButton clusterId={cluster.cluster_id} title={type.label} />
       </section>
 
       <Link href={backHref} className="inline-flex min-h-12 items-center underline">
