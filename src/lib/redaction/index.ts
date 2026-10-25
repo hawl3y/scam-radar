@@ -66,6 +66,11 @@ const NAME_RULES: RegExp[] = [
     "g",
   ),
   new RegExp(String.raw`((?:^|\n)\s*(?:${ci("hi|hello|hey|dear|good morning|good afternoon|good evening")})\s+)(${NAME_1_2})`, "g"),
+  // Greeting + name anywhere ("…today. Hi Linda!"), when punctuation follows the name.
+  new RegExp(
+    String.raw`(\b(?:${ci("hi|hello|hey|dear|good morning|good afternoon|good evening")})\s+)(${NAME_1_2})(?=\s*[,!.:;])`,
+    "g",
+  ),
   new RegExp(
     String.raw`((?:^|\n)\s*(?:${ci("thanks|thank you|regards|best|sincerely|cheers|respectfully|best regards|kind regards")})\s*,?\s*\n?\s*|\n\s*[-–—]\s*)(${NAME_1_2})(?=\s*$)`,
     "g",
