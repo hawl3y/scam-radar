@@ -21,7 +21,7 @@ export default async function FlyerPage() {
   return (
     <article className="mx-auto max-w-xl space-y-6 rounded-lg bg-white p-6 text-black sm:p-8 print:max-w-none print:space-y-4 print:rounded-none print:p-0">
       <PrintButton />
-      <header className="space-y-2 text-center">
+      <header className="space-y-2 pb-6 text-center print:pb-4">
         <h1>
           <Logo palette="print" title={SITE_NAME} className="mx-auto h-16 w-auto sm:h-20 print:h-20" />
         </h1>
