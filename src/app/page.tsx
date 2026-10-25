@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { FeedList } from "@/components/feed-list";
+import { RememberZip } from "@/components/local-report-data";
 import { RecordUsage } from "@/components/record-usage";
 import { TrendingSection } from "@/components/trending-section";
 import { ZipForm } from "@/components/zip-form";
@@ -77,6 +78,7 @@ async function HeroText({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
   if (viewer.kind === "located") {
     return (
       <p className="text-muted sm:text-lg">
+        {!viewer.signedIn && <RememberZip zip={viewer.zip} />}
         Within {viewer.radiusMiles} miles of {viewer.zip} ·{" "}
         <Link href={viewer.signedIn ? "/settings" : "/"} className="-my-3 inline-block py-3 underline">
           Change

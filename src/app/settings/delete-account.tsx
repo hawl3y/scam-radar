@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ClearsLocalDataForm } from "@/components/local-report-data";
 import { deleteAccount, type DeleteState } from "./delete-actions";
 
 export function DeleteAccount() {
@@ -8,7 +9,7 @@ export function DeleteAccount() {
   return (
     <details className="rounded-md border-2 border-border p-4">
       <summary className="inline-flex min-h-12 cursor-pointer items-center font-bold">Delete my account</summary>
-      <form action={action} className="mt-3 space-y-4">
+      <ClearsLocalDataForm action={action} className="mt-3 space-y-4">
         <p>
           This permanently deletes your account, your settings, your reports, and your &quot;I got this too&quot;
           answers. It can&apos;t be undone.
@@ -29,7 +30,7 @@ export function DeleteAccount() {
         >
           {pending ? "Deleting…" : "Delete my account"}
         </button>
-      </form>
+      </ClearsLocalDataForm>
     </details>
   );
 }

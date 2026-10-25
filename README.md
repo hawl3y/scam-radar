@@ -104,6 +104,15 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
 - **No duplicates:** each email is recorded in `alerts_sent` before it's sent and released if sending fails.
 - **Unsubscribe:** every email has one-click unsubscribe headers and a signed link to `/email-preferences` that works without signing in.
 
+## Report flow
+
+- `/report` is public. The message comes first; a keyword matcher (`src/lib/classify.ts`) suggests one of 7 groups ("Looks like: …") only when confident, otherwise "Something else or not sure". Channels, redaction, and the editable preview are unchanged.
+- Sign-in happens at **Post**, inside the page (email → 6-digit code), then the report posts. If someone taps the emailed link instead, a short-lived `byebell_return_to` cookie brings them back to `/report`.
+- The **redacted** draft is kept in the browser (`localStorage`, `byebell:report-draft`) for up to 24 hours so it survives sign-in or a reload. It's cleared on post, sign-out, account deletion, and "Discard draft". Raw text is never stored.
+- New users' first report zip becomes their home zip ("We'll use this zip for your alerts").
+- Limits: previews 30/hour per IP (public); posts unchanged (5/hour, 20/day per user).
+- Scam groups (`src/lib/scam-types.ts`): fake fee or delivery, impersonation, family emergency, too good to be true, tech support, home repair or in-person, something else. Older finer-grained values are shown as their group (`LEGACY_SCAM_TYPES`) until the data remap migration.
+
 ## Trust and safety
 
 - **Admin access:** `/admin` is owner-only. Add yourself once per Supabase project (dev and prod) in **SQL Editor**:

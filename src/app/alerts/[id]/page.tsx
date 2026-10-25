@@ -7,8 +7,9 @@ import { getCluster, getClusterExamples, getMyClusterStatus, getMyExampleState }
 import { crowdLabel } from "@/lib/crowd";
 import { formatDistance, formatTimeAgo } from "@/lib/format";
 import { defang } from "@/lib/redaction";
-import { CHANNELS, SCAM_TYPES } from "@/lib/scam-types";
+import { CHANNELS, scamTypeInfo } from "@/lib/scam-types";
 import { createPublicClient } from "@/lib/supabase/public";
+import { ClearReportDraft } from "@/components/local-report-data";
 import { RecordUsage } from "@/components/record-usage";
 import { getViewer } from "@/lib/viewer";
 import { CorroborateButton } from "./corroborate-button";
@@ -23,9 +24,9 @@ async function getPreview(id: string) {
   cacheLife("minutes");
   if (!UUID.test(id)) return null;
   const { data } = await createPublicClient().rpc("get_cluster", { p_cluster_id: id });
-  const cluster = (data as { scam_type: keyof typeof SCAM_TYPES; report_count: number; corroboration_count: number }[] | null)?.[0];
+  const cluster = (data as { scam_type: string; report_count: number; corroboration_count: number }[] | null)?.[0];
   if (!cluster) return null;
-  return { title: SCAM_TYPES[cluster.scam_type].label, description: crowdLabel(cluster.report_count, cluster.corroboration_count) };
+  return { title: scamTypeInfo(cluster.scam_type).label, description: crowdLabel(cluster.report_count, cluster.corroboration_count) };
 }
 
 export async function generateMetadata({ params }: PageProps<"/alerts/[id]">): Promise<Metadata> {
@@ -45,7 +46,7 @@ export default function AlertPage({ params, searchParams }: PageProps<"/alerts/[
 }
 
 async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
-  const [{ id }, { zip, posted, hidden, src }] = await Promise.all([params, searchParams]);
+  const [{ id }, { zip, posted, hidden, src, zipsaved }] = await Promise.all([params, searchParams]);
   if (!UUID.test(id)) notFound();
   const emailVisit =
     src === "digest" || src === "instant" ? (
@@ -81,7 +82,7 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
     );
   }
 
-  const type = SCAM_TYPES[cluster.scam_type];
+  const type = scamTypeInfo(cluster.scam_type);
   const distance = formatDistance(cluster.distance_miles, viewerZip !== null && viewerZip === cluster.nearest_zip);
   const meta = [distance, `last reported ${formatTimeAgo(new Date(cluster.last_seen))}`].filter(Boolean).join(" · ");
 
@@ -90,9 +91,19 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
       {emailVisit}
       {hiddenNotice}
       {posted && (
-        <p role="status" className="rounded-md border-2 border-accent p-4 font-bold">
-          Thanks. Your report is posted and neighbors nearby can see it.
-        </p>
+        <div role="status" className="space-y-1 rounded-md border-2 border-accent bg-surface p-4">
+          <ClearReportDraft />
+          <p className="font-bold">Thanks. Your report is posted and neighbors nearby can see it.</p>
+          {zipsaved && (
+            <p>
+              We&apos;ll use this zip for your alerts.{" "}
+              <Link href="/settings" className="underline">
+                Change it in Settings
+              </Link>
+              .
+            </p>
+          )}
+        </div>
       )}
 
       <header className="space-y-1">
