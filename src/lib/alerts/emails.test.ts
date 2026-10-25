@@ -45,4 +45,14 @@ describe("renderDigestEmail", () => {
     expect(renderDigestEmail([cluster], 1, links).subject).toBe("1 scam reported near you");
     expect(email.text).toContain(`/alerts/${cluster.cluster_id}?zip=10989&src=digest`);
   });
+
+  it("invites readers to print a flyer (digest only)", () => {
+    const digest = renderDigestEmail([cluster], 1, links);
+    expect(digest.html).toContain('href="https://scam-radar.example/flyer"');
+    expect(digest.html).toContain("Know a neighbor who'd want this?");
+    expect(digest.text).toContain("Print a ByeBell flyer for your building, library, or community board: https://scam-radar.example/flyer");
+    const instant = renderInstantEmail(cluster, links);
+    expect(instant.html).not.toContain("/flyer");
+    expect(instant.text).not.toContain("/flyer");
+  });
 });

@@ -62,6 +62,11 @@ function clusterText(cluster: EmailCluster, links: EmailLinks) {
   ].join("\n");
 }
 
+const FLYER_INVITE = (siteUrl: string) => ({
+  html: `<p style="margin:24px 0 0">Know a neighbor who'd want this? <a href="${escapeHtml(`${siteUrl}/flyer`)}" style="color:#1d4ed8">Print a ${escapeHtml(SITE_NAME)} flyer</a> for your building, library, or community board.</p>`,
+  text: `Know a neighbor who'd want this? Print a ${SITE_NAME} flyer for your building, library, or community board: ${siteUrl}/flyer`,
+});
+
 function layout(intro: string, body: string, links: EmailLinks) {
   return `<!doctype html>
 <html lang="en"><body style="margin:0;padding:24px 16px;background:#ffffff;color:#111827;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:1.5">
@@ -99,7 +104,7 @@ export function renderDigestEmail(clusters: EmailCluster[], totalItems: number, 
       : "";
   return {
     subject: `${count} reported near you`,
-    html: layout(intro, clusters.map((c) => clusterHtml(c, links)).join("") + more, links),
-    text: `${intro}\n\n${clusters.map((c) => clusterText(c, links)).join("\n\n")}${textFooter(links)}`,
+    html: layout(intro, clusters.map((c) => clusterHtml(c, links)).join("") + more + FLYER_INVITE(links.siteUrl).html, links),
+    text: `${intro}\n\n${clusters.map((c) => clusterText(c, links)).join("\n\n")}\n\n${FLYER_INVITE(links.siteUrl).text}${textFooter(links)}`,
   };
 }
