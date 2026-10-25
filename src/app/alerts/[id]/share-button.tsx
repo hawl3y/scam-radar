@@ -30,8 +30,22 @@ export function ShareButton({ clusterId, title }: { clusterId: string; title: st
       <button
         type="button"
         onClick={share}
-        className="inline-flex min-h-12 items-center rounded-md border-2 border-accent px-5 text-lg font-bold"
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border-2 border-accent bg-surface px-5 text-lg font-bold sm:w-auto"
       >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5 text-accent"
+          aria-hidden="true"
+        >
+          <path d="M12 3v12" />
+          <path d="m7 8 5-5 5 5" />
+          <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+        </svg>
         Share with family
       </button>
       {status && (
