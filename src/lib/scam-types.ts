@@ -13,28 +13,37 @@ export type Channel = keyof typeof CHANNELS;
 
 type ScamTypeInfo = { label: string; tips: string[] };
 
+// The 7 groups people choose from (and the app writes).
 export const SCAM_TYPES = {
-  government: {
-    label: "Government impersonation (IRS, Social Security, police)",
+  fake_fee: {
+    label: "Fake fee or delivery (package, unpaid toll, parking)",
     tips: [
-      "Government agencies don't call, text, or email demanding immediate payment.",
-      "Hang up and call the agency using the number on its official website.",
-      "Never pay with gift cards, wire transfers, or cryptocurrency.",
+      "Don't click the link. Check tracking or your account on the carrier's or agency's own website or app.",
+      "Carriers and toll agencies don't ask for payment by text, or threaten instant penalties.",
     ],
   },
-  bank: {
-    label: "Bank or fraud alert",
+  impersonation: {
+    label: "Impersonation (government, bank, utility, police)",
     tips: [
-      "Don't use links or numbers in the message. Call the number on the back of your card.",
-      "Your bank will never ask for your password, PIN, or a code sent to your phone.",
-      "If you shared details, call your bank right away to lock your account.",
+      "Hang up and call back using a number you look up yourself, like the one on your card, bill, or the official website.",
+      "Real agencies, banks, and utilities don't demand immediate payment or ask for your PIN or a code sent to your phone.",
+      "Never pay with gift cards, wire transfers, payment apps, or cryptocurrency.",
     ],
   },
-  delivery: {
-    label: "Package delivery",
+  family_emergency: {
+    label: "Family emergency (grandparent, loved one in trouble)",
     tips: [
-      "Don't click the link. Check tracking on the carrier's own website or app.",
-      "Carriers don't ask for payment by text to redeliver a package.",
+      "Hang up and call your family member directly on a number you know.",
+      "Ask a question only the real person would know.",
+      "Scammers push for secrecy and speed. Take your time and tell someone.",
+    ],
+  },
+  too_good: {
+    label: "Too good to be true (prize, job offer, investment or crypto)",
+    tips: [
+      "You can't win a contest you didn't enter, and real prizes never require a fee.",
+      "Real employers don't ask you to pay to start or to send back money from a check they mailed you.",
+      "Guaranteed high returns are a warning sign, especially from people you met online.",
     ],
   },
   tech_support: {
@@ -45,60 +54,16 @@ export const SCAM_TYPES = {
       "If you let someone in, disconnect from the internet and get local help.",
     ],
   },
-  utility: {
-    label: "Utility shutoff",
-    tips: [
-      "Utilities send written notice before shutting off service.",
-      "Hang up and call the number on your bill to check your account.",
-      "Never pay with gift cards or a payment app to avoid a shutoff.",
-    ],
-  },
-  prize: {
-    label: "Prize, lottery, or sweepstakes",
-    tips: [
-      "You can't win a contest you didn't enter.",
-      "Real prizes never require you to pay a fee or taxes up front.",
-    ],
-  },
-  family_emergency: {
-    label: "Family emergency or grandparent scam",
-    tips: [
-      "Hang up and call your family member directly on a number you know.",
-      "Ask a question only the real person would know.",
-      "Scammers push for secrecy and speed. Take your time and tell someone.",
-    ],
-  },
-  job: {
-    label: "Job offer",
-    tips: [
-      "Real employers don't send checks and ask you to send money back.",
-      "Be wary of jobs offered by text or chat without an interview.",
-    ],
-  },
-  investment: {
-    label: "Investment or cryptocurrency",
-    tips: [
-      "Guaranteed high returns are a warning sign.",
-      "Be cautious of investment advice from people you met online.",
-    ],
-  },
-  home_repair: {
-    label: "Home repair or contractor",
+  in_person: {
+    label: "Home repair or in-person",
     tips: [
       "Be wary of door-to-door offers for repairs you didn't request.",
-      "Get written estimates and check licenses before paying anything.",
-      "Never pay the full amount up front.",
-    ],
-  },
-  toll: {
-    label: "Unpaid toll or parking",
-    tips: [
-      "Don't click the link. Check your account on the toll agency's official website.",
-      "Toll agencies don't threaten immediate penalties by text.",
+      "Ask for ID and call the company back on a number you look up yourself.",
+      "Get written estimates, check licenses, and never pay the full amount up front.",
     ],
   },
   other: {
-    label: "Something else",
+    label: "Something else or not sure",
     tips: [
       "Don't click links or call numbers in unexpected messages.",
       "Never pay with gift cards, wire transfers, or cryptocurrency.",
@@ -108,6 +73,32 @@ export const SCAM_TYPES = {
 } as const satisfies Record<string, ScamTypeInfo>;
 
 export type ScamType = keyof typeof SCAM_TYPES;
+
+// Earlier, finer-grained types still stored on older reports and clusters.
+// The database keeps these enum values; the app shows them as their group.
+export const LEGACY_SCAM_TYPES = {
+  government: "impersonation",
+  bank: "impersonation",
+  utility: "impersonation",
+  delivery: "fake_fee",
+  toll: "fake_fee",
+  prize: "too_good",
+  job: "too_good",
+  investment: "too_good",
+  home_repair: "in_person",
+} as const satisfies Record<string, ScamType>;
+
+/** Any type value from the database, including legacy ones. */
+export type StoredScamType = ScamType | keyof typeof LEGACY_SCAM_TYPES;
+
+export function toScamType(value: string): ScamType {
+  if (value in SCAM_TYPES) return value as ScamType;
+  return (LEGACY_SCAM_TYPES as Record<string, ScamType>)[value] ?? "other";
+}
+
+export function scamTypeInfo(value: string): ScamTypeInfo {
+  return SCAM_TYPES[toScamType(value)];
+}
 
 export const CHANNEL_KEYS = Object.keys(CHANNELS) as [Channel, ...Channel[]];
 export const SCAM_TYPE_KEYS = Object.keys(SCAM_TYPES) as [ScamType, ...ScamType[]];

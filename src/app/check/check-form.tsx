@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { ClusterCard } from "@/components/cluster-card";
-import { GENERAL_WARNING_SIGNS, SCAM_TYPES } from "@/lib/scam-types";
+import { GENERAL_WARNING_SIGNS, scamTypeInfo } from "@/lib/scam-types";
 import { check, type CheckState } from "./actions";
 
 const inputClass = "block w-full min-h-12 rounded-md border-2 border-border bg-background px-3 text-lg";
@@ -73,7 +73,7 @@ function CheckResult({ state, signedIn }: { state: Extract<CheckState, { status:
     );
   }
 
-  const tips = SCAM_TYPES[state.matches[0].scam_type].tips;
+  const tips = scamTypeInfo(state.matches[0].scam_type).tips;
   return (
     <section role="status" className="space-y-4">
       <div className="space-y-2 rounded-md border-2 border-accent p-4">

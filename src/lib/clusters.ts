@@ -7,13 +7,13 @@ import {
   chooseCluster,
   type ClusterCandidate,
 } from "@/lib/matching";
-import type { Channel, ScamType } from "@/lib/scam-types";
+import type { Channel, StoredScamType } from "@/lib/scam-types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type ClusterSummary = {
   cluster_id: string;
-  scam_type: ScamType;
+  scam_type: StoredScamType;
   report_count: number;
   corroboration_count: number;
   last_seen: string;
@@ -27,7 +27,7 @@ export type ClusterMatch = ClusterSummary & { score: number };
 
 export type ClusterDetail = {
   cluster_id: string;
-  scam_type: ScamType;
+  scam_type: StoredScamType;
   report_count: number;
   corroboration_count: number;
   first_seen: string;

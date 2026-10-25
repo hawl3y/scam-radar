@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Channel, ScamType } from "@/lib/scam-types";
+import type { Channel, StoredScamType } from "@/lib/scam-types";
 import { alertEmailsRemaining, warnBudgetReached } from "./budget";
 import { renderInstantEmail } from "./emails";
 import { INSTANT_DAILY_LIMIT, isHot, underInstantLimit } from "./policy";
@@ -30,7 +30,7 @@ export async function sendInstantAlerts(clusterId: string): Promise<{ sent: numb
     ]);
   const lookupError = error ?? latestError ?? signalError;
   if (lookupError) throw new Error(`cluster lookup failed: ${lookupError.message}`);
-  const cluster = (clusterRows as { scam_type: ScamType; report_count: number; corroboration_count: number }[])[0];
+  const cluster = (clusterRows as { scam_type: StoredScamType; report_count: number; corroboration_count: number }[])[0];
   const latest = (latestRows as { description_redacted: string; channel: Channel }[])[0];
   if (!cluster || !latest || !isHot(Number(signal))) return { sent: 0 };
 

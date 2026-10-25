@@ -7,8 +7,8 @@ describe("subjects", () => {
     expect(subjectInfo("Computer  & technical support")).toMatchObject({ label: "Tech support calls", scamType: "tech_support" });
   });
 
-  it("maps impostor calls to government tips", () => {
-    expect(subjectInfo("Calls pretending to be government, businesses, or family and friends").scamType).toBe("government");
+  it("maps impostor calls to impersonation tips", () => {
+    expect(subjectInfo("Calls pretending to be government, businesses, or family and friends").scamType).toBe("impersonation");
   });
 
   it("keeps unknown subjects as-is, with a general tip", () => {

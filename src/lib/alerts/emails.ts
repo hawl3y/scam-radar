@@ -1,12 +1,12 @@
 import { crowdLabel } from "@/lib/crowd";
 import { formatDistance } from "@/lib/format";
 import { defang } from "@/lib/redaction";
-import { CHANNELS, SCAM_TYPES, type Channel, type ScamType } from "@/lib/scam-types";
+import { CHANNELS, scamTypeInfo, type Channel, type StoredScamType } from "@/lib/scam-types";
 import { SITE_NAME } from "@/lib/site";
 
 export type EmailCluster = {
   cluster_id: string;
-  scam_type: ScamType;
+  scam_type: StoredScamType;
   report_count: number;
   corroboration_count: number;
   distance_miles: number | null;
@@ -44,7 +44,7 @@ function meta(cluster: EmailCluster, homeZip: string | null) {
 function clusterHtml(cluster: EmailCluster, links: EmailLinks) {
   return `
 <div style="border:2px solid #9ca3af;border-radius:8px;padding:16px;margin:0 0 16px">
-  <p style="margin:0 0 4px;font-size:20px;font-weight:700">${escapeHtml(SCAM_TYPES[cluster.scam_type].label)}</p>
+  <p style="margin:0 0 4px;font-size:20px;font-weight:700">${escapeHtml(scamTypeInfo(cluster.scam_type).label)}</p>
   <p style="margin:0 0 4px;font-weight:700">${escapeHtml(crowdLabel(cluster.report_count, cluster.corroboration_count))}</p>
   <p style="margin:0 0 8px;color:#4b5563">${escapeHtml(meta(cluster, links.homeZip))}</p>
   <p style="margin:0 0 12px;white-space:pre-wrap">${escapeHtml(excerpt(cluster.latest_description))}</p>
@@ -54,7 +54,7 @@ function clusterHtml(cluster: EmailCluster, links: EmailLinks) {
 
 function clusterText(cluster: EmailCluster, links: EmailLinks) {
   return [
-    SCAM_TYPES[cluster.scam_type].label,
+    scamTypeInfo(cluster.scam_type).label,
     crowdLabel(cluster.report_count, cluster.corroboration_count),
     meta(cluster, links.homeZip),
     excerpt(cluster.latest_description),
@@ -80,7 +80,7 @@ function textFooter(links: EmailLinks) {
 
 export function renderInstantEmail(cluster: EmailCluster, baseLinks: EmailLinks): RenderedEmail {
   const links = { ...baseLinks, source: "instant" as const };
-  const label = SCAM_TYPES[cluster.scam_type].label;
+  const label = scamTypeInfo(cluster.scam_type).label;
   const intro = "Several neighbors near you have reported this. Here's what it looks like and what to do.";
   return {
     subject: `Scam alert near you: ${label}`,
