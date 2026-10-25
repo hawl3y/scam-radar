@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ReportForm } from "./report-form";
@@ -18,11 +17,17 @@ export default function ReportPage() {
   );
 }
 
+// Open to everyone; sign-in happens at Post, inside the form.
 async function Report() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
-  if (!auth?.claims) redirect("/login?next=/report");
+  if (!auth?.claims) return <ReportForm signedIn={false} defaultZip="" hasHomeZip={false} />;
 
   const { data: profile } = await supabase.from("profiles").select("home_zip").maybeSingle();
-  return <ReportForm defaultZip={profile?.home_zip ?? ""} />;
+  let zip = profile?.home_zip ?? "";
+  if (!zip) {
+    const { data: last } = await supabase.rpc("my_last_report_zip");
+    zip = (last as string | null) ?? "";
+  }
+  return <ReportForm signedIn defaultZip={zip} hasHomeZip={Boolean(profile?.home_zip)} />;
 }

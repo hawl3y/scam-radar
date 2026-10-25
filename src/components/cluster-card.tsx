@@ -3,7 +3,7 @@ import { crowdLabel } from "@/lib/crowd";
 import { formatDistance, formatTimeAgo } from "@/lib/format";
 import { defang } from "@/lib/redaction";
 import type { ClusterSummary } from "@/lib/clusters";
-import { CHANNELS, SCAM_TYPES } from "@/lib/scam-types";
+import { CHANNELS, scamTypeInfo } from "@/lib/scam-types";
 
 export function ClusterCard({
   cluster,
@@ -27,7 +27,7 @@ export function ClusterCard({
           {isNew && (
             <span className="mr-2 rounded bg-accent px-2 py-0.5 text-base text-accent-foreground">New</span>
           )}
-          {SCAM_TYPES[cluster.scam_type].label}
+          {scamTypeInfo(cluster.scam_type).label}
         </h3>
         <p className="font-bold">{crowdLabel(cluster.report_count, cluster.corroboration_count)}</p>
         <p className="text-muted">{meta}</p>

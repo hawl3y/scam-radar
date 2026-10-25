@@ -8,7 +8,7 @@ type SubjectInfo = { label: string; scamType: ScamType; tip: string };
 const SUBJECTS: Record<string, SubjectInfo> = {
   "Calls pretending to be government, businesses, or family and friends": {
     label: "Impostor calls (government, businesses, or family)",
-    scamType: "government",
+    scamType: "impersonation",
     tip: "Hang up and call back using a number you look up yourself. Real agencies don't demand payment over the phone.",
   },
   "Reducing your debt (credit cards, mortgage, student loans)": {
@@ -28,17 +28,17 @@ const SUBJECTS: Record<string, SubjectInfo> = {
   },
   "Energy, solar, & utilities": {
     label: "Energy, solar, and utility calls",
-    scamType: "utility",
+    scamType: "impersonation",
     tip: "Utilities don't threaten same-day shutoffs by phone. Call the number on your bill to check your account.",
   },
   "Home improvement & cleaning": {
     label: "Home improvement offers",
-    scamType: "home_repair",
+    scamType: "in_person",
     tip: "Choose your own licensed contractor, get a written estimate, and never pay the full amount up front.",
   },
   "Lotteries, prizes & sweepstakes": {
     label: "Prize and sweepstakes calls",
-    scamType: "prize",
+    scamType: "too_good",
     tip: "You can't win a contest you didn't enter, and real prizes never require a fee.",
   },
   "Medical & prescriptions": {
@@ -53,7 +53,7 @@ const SUBJECTS: Record<string, SubjectInfo> = {
   },
   "Work from home": {
     label: "Work-from-home offers",
-    scamType: "job",
+    scamType: "too_good",
     tip: "Real jobs don't ask you to pay to start, or to send back money from a check they mailed you.",
   },
 };

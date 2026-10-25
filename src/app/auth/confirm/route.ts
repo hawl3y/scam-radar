@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { postLoginPath } from "@/lib/auth";
+import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/server";
 
 // Sign-in link landing. Two shapes are supported:
@@ -31,6 +32,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=link", request.url));
   }
 
-  const path = await postLoginPath("/");
-  return NextResponse.redirect(new URL(path, request.url));
+  // Started signing in from the report flow: go back to the (saved) draft.
+  const returnTo = request.cookies.get("byebell_return_to")?.value;
+  const path = returnTo ? safeNext(returnTo) : await postLoginPath("/");
+  const response = NextResponse.redirect(new URL(path, request.url));
+  if (returnTo) response.cookies.delete("byebell_return_to");
+  return response;
 }

@@ -3,7 +3,7 @@ import { reportDraftSchema } from "./report-schema";
 
 const valid = {
   channel: "text",
-  scamType: "delivery",
+  scamType: "fake_fee",
   description: "Got a text saying my package is held and to pay a fee.",
   zip: "02139",
 };

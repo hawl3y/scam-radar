@@ -9,6 +9,7 @@ describe("RATE_LIMITS", () => {
     expect(RATE_LIMITS.rate).toMatchObject({ limit: 60, windowSeconds: 3600 });
     expect(RATE_LIMITS.flag).toMatchObject({ limit: 20, windowSeconds: 3600 });
     expect(RATE_LIMITS.check).toMatchObject({ limit: 20, windowSeconds: 3600 });
+    expect(RATE_LIMITS.reportPreview).toMatchObject({ limit: 30, windowSeconds: 3600 });
   });
 
   it("uses distinct key names", () => {

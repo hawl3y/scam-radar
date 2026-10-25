@@ -1,0 +1,33 @@
+import { describe, expect, it } from "vitest";
+import { suggestScamType } from "./classify";
+
+const s = (t: string) => suggestScamType(t);
+
+describe("suggestScamType", () => {
+  it("recognizes each group from typical messages", () => {
+    expect(s("USPS: Your package is on hold due to an incomplete address. Update at usps-help.com")).toEqual({ type: "fake_fee", confident: true });
+    expect(s("You have an unpaid toll balance of $4.15. Pay now: ezpass-pay.xyz")).toEqual({ type: "fake_fee", confident: true });
+    expect(s("This is the IRS. You owe back taxes and a warrant will be issued")).toEqual({ type: "impersonation", confident: true });
+    expect(s("Chase Fraud Alert: did you attempt a purchase of $849? Reply YES or NO")).toEqual({ type: "impersonation", confident: true });
+    expect(s("Your electric company says power will be shut off in one hour")).toEqual({ type: "impersonation", confident: true });
+    expect(s("Grandma it's me, I need money for bail, don't tell mom")).toEqual({ type: "family_emergency", confident: true });
+    expect(s("Congratulations, you've won a $1,000 prize!")).toEqual({ type: "too_good", confident: true });
+    expect(s("Remote job offer: work from home, $500 a day")).toEqual({ type: "too_good", confident: true });
+    expect(s("A popup said my computer has a virus and to call Microsoft")).toEqual({ type: "tech_support", confident: true });
+    expect(s("Two men knocked on my door offering to pave the driveway")).toEqual({ type: "in_person", confident: true });
+  });
+
+  it("treats family + arrest as a family emergency, not impersonation", () => {
+    expect(s("Officer here, your grandson was arrested and needs bail").type).toBe("family_emergency");
+  });
+
+  it("defaults to other when nothing matches", () => {
+    expect(s("Someone called and hung up right away")).toEqual({ type: "other", confident: false });
+    expect(s("")).toEqual({ type: "other", confident: false });
+  });
+
+  it("isn't confident when groups compete evenly", () => {
+    // One bank match, one prize match: unclear.
+    expect(s("Your bank says you won something")).toEqual({ type: "other", confident: false });
+  });
+});

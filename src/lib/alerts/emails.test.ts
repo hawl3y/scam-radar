@@ -17,7 +17,7 @@ describe("renderInstantEmail", () => {
   const email = renderInstantEmail(cluster, links);
 
   it("describes the crowd, not a verdict", () => {
-    expect(email.subject).toBe("Scam alert near you: Package delivery");
+    expect(email.subject).toBe("Scam alert near you: Fake fee or delivery (package, unpaid toll, parking)");
     expect(email.text).toContain("Reported by 2 neighbors · 1 got this too");
     expect(email.text).not.toMatch(/confirmed/i);
   });

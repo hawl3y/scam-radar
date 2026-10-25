@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { DEFAULT_RADIUS, RADIUS_OPTIONS } from "@/lib/profile-schema";
 import { createClient } from "@/lib/supabase/server";
+import { ClearsLocalDataForm } from "@/components/local-report-data";
 import { DeleteAccount } from "./delete-account";
 import { SettingsForm } from "./settings-form";
 
@@ -41,11 +42,11 @@ async function Settings({ searchParams }: Pick<PageProps<"/settings">, "searchPa
         alertMode={profile?.alert_mode ?? "digest"}
         welcome={Boolean(welcome)}
       />
-      <form action="/auth/signout" method="post">
+      <ClearsLocalDataForm action="/auth/signout" method="post">
         <button type="submit" className="min-h-12 underline">
           Sign out
         </button>
-      </form>
+      </ClearsLocalDataForm>
       <DeleteAccount />
     </>
   );

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { formatTimeAgo } from "@/lib/format";
 import { defang } from "@/lib/redaction";
-import { CHANNELS, SCAM_TYPES, type Channel, type ScamType } from "@/lib/scam-types";
+import { CHANNELS, scamTypeInfo, type Channel, type StoredScamType } from "@/lib/scam-types";
 import { createClient } from "@/lib/supabase/server";
 import { AdminReportActions } from "./report-actions";
 
@@ -28,7 +28,7 @@ const REASON_LABELS: Record<string, string> = {
 type AdminReport = {
   report_id: string;
   cluster_id: string | null;
-  scam_type: ScamType;
+  scam_type: StoredScamType;
   channel: Channel;
   description_redacted: string;
   zip: string;
@@ -93,7 +93,7 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
           {reports.map((r) => (
             <li key={r.report_id} className="space-y-2 rounded-md border-2 border-border p-4">
               <p className="font-bold">
-                {SCAM_TYPES[r.scam_type].label}
+                {scamTypeInfo(r.scam_type).label}
                 {r.status !== "active" && (
                   <span className="ml-2 rounded bg-foreground/10 px-2 py-0.5 text-base">{r.status}</span>
                 )}
