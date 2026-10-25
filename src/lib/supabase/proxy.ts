@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseEnv } from "./env";
 
-const PROTECTED_PATHS = ["/settings", "/report", "/admin"];
+// /report is public: sign-in happens at Post, inside the flow.
+const PROTECTED_PATHS = ["/settings", "/admin"];
 const ACTIVITY_COOKIE = "sr_active_day";
 
 const isProtected = (pathname: string) =>

@@ -23,6 +23,8 @@ export type ReportState =
       found: Partial<Record<RedactionKind, number>>;
       notice?: string;
       errors?: FieldErrors;
+      /** Post was attempted while signed out: show the in-flow sign-in. */
+      signInRequired?: boolean;
     };
 
 function readDraft(formData: FormData) {
@@ -44,6 +46,10 @@ const UNKNOWN_ZIP = { zip: ["We don't recognize that zip code. Try the zip where
 
 async function preview(formData: FormData): Promise<ReportState> {
   const raw = readDraft(formData);
+  // Previews are public (sign-in happens at Post), so they're limited per IP.
+  if (!(await allowRequest(RATE_LIMITS.reportPreview))) {
+    return { step: "draft", version: Date.now(), values: raw as Partial<ReportDraft>, errors: { form: [RATE_LIMITED_MESSAGE] } };
+  }
   const parsed = reportDraftSchema.safeParse(raw);
   if (!parsed.success) {
     return { step: "draft", version: Date.now(), values: raw as Partial<ReportDraft>, errors: z.flattenError(parsed.error).fieldErrors };
@@ -82,7 +88,7 @@ async function post(formData: FormData): Promise<ReportState> {
   const { data: auth } = await supabase.auth.getClaims();
   const userId = auth?.claims?.sub;
   if (!userId) {
-    return { step: "preview", version: Date.now(), draft: parsed.data, found: {}, errors: { form: ["Your session ended. Please sign in again."] } };
+    return { step: "preview", version: Date.now(), draft: parsed.data, found: {}, signInRequired: true };
   }
 
   if (!(await allowRequest(RATE_LIMITS.reportHourly, userId)) || !(await allowRequest(RATE_LIMITS.reportDaily, userId))) {
@@ -106,6 +112,15 @@ async function post(formData: FormData): Promise<ReportState> {
     return { step: "preview", version: Date.now(), draft: parsed.data, found: {}, errors: { form: ["We couldn't post your report. Please try again."] } };
   }
 
+  // New users: use the report's zip as their home zip (for the feed and alerts).
+  let zipSaved = false;
+  const { data: profile } = await supabase.from("profiles").select("home_zip").maybeSingle();
+  if (profile && !profile.home_zip) {
+    const { error: zipError } = await supabase.from("profiles").update({ home_zip: parsed.data.zip }).eq("id", userId);
+    if (zipError) console.error("saving home zip failed", zipError.message);
+    zipSaved = !zipError;
+  }
+
   let clusterId: string | null = null;
   try {
     clusterId = await assignCluster(data.id);
@@ -118,7 +133,7 @@ async function post(formData: FormData): Promise<ReportState> {
     const id = clusterId;
     after(() => sendInstantAlerts(id).catch((e) => console.error("instant alerts failed", e)));
   }
-  redirect(clusterId ? `/alerts/${clusterId}?posted=1` : "/");
+  redirect(clusterId ? `/alerts/${clusterId}?posted=1${zipSaved ? "&zipsaved=1" : ""}` : "/");
 }
 
 export async function reportAction(prev: ReportState, formData: FormData): Promise<ReportState> {
@@ -127,6 +142,8 @@ export async function reportAction(prev: ReportState, formData: FormData): Promi
       return post(formData);
     case "back":
       return { step: "draft", version: Date.now(), values: readDraft(formData) as Partial<ReportDraft> };
+    case "discard":
+      return { step: "draft", version: Date.now() };
     default:
       return preview(formData);
   }
