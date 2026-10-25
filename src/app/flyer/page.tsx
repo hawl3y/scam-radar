@@ -30,7 +30,7 @@ export default async function FlyerPage() {
 
       <ul className="space-y-3 text-lg sm:text-xl print:space-y-2">
         <li>
-          <strong>Got a strange text, call, or visit?</strong> Paste it in and see if neighbors reported the same thing.
+          <strong>Got a strange text, call, or visit?</strong> See if neighbors got it too.
         </li>
         <li>
           <strong>See what&apos;s going around</strong> in our area, with plain advice on what to do.

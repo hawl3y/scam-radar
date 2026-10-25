@@ -8,6 +8,7 @@ import { crowdLabel } from "@/lib/crowd";
 import { formatDistance, formatTimeAgo } from "@/lib/format";
 import { defang } from "@/lib/redaction";
 import { CHANNELS, scamTypeInfo } from "@/lib/scam-types";
+import { SITE_NAME } from "@/lib/site";
 import { createPublicClient } from "@/lib/supabase/public";
 import { ClearReportDraft } from "@/components/local-report-data";
 import { RecordUsage } from "@/components/record-usage";
@@ -103,6 +104,13 @@ async function AlertCard({ params, searchParams }: PageProps<"/alerts/[id]">) {
               .
             </p>
           )}
+          <p className="text-sm text-muted">
+            Know a neighbor who&apos;d want this?{" "}
+            <Link href="/flyer" className="underline">
+              Print a {SITE_NAME} flyer
+            </Link>{" "}
+            for your building, library, or community board.
+          </p>
         </div>
       )}
 
