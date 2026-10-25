@@ -36,25 +36,34 @@ export function joinAreaCodes(codes: string[]): string {
 const shortDate = (day: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${day}T12:00:00Z`));
 
-export function scopeLabels(scope: Exclude<TrendScope, { kind: "none" }>): { heading: string; intro: string } {
+/** Heading, plus a summary that leads with the count: "166" + "calls reported to the FTC in …". */
+export function scopeLabels(scope: Exclude<TrendScope, { kind: "none" }>): {
+  heading: string;
+  count: string;
+  summary: string;
+} {
   const { summary } = scope;
   const name = stateName(scope.state);
   const period =
     summary.daysThisWeek >= 7
       ? `in the 7 days through ${shortDate(summary.weekEnding)}`
       : `in the ${summary.daysThisWeek} ${summary.daysThisWeek === 1 ? "day" : "days"} of data so far, through ${shortDate(summary.weekEnding)}`;
+  const count = summary.totalThisWeek.toLocaleString("en-US");
+  const calls = summary.totalThisWeek === 1 ? "call" : "calls";
 
   if (scope.kind === "market") {
     const codes = joinAreaCodes(scope.areaCodes);
     const plural = scope.areaCodes.length > 1 ? "area codes" : "area code";
     return {
       heading: `Unwanted calls reported in ${name} (${codes} ${plural})`,
-      intro: `Reported to the FTC by people in ${name} with ${codes} phone numbers, ${period}: ${summary.totalThisWeek}. The most common:`,
+      count,
+      summary: `${calls} reported to the FTC ${period}, by people in ${name} with ${codes} numbers.`,
     };
   }
   return {
     heading: `Unwanted calls reported in ${name}`,
-    intro: `Reported to the FTC by people in ${name}, ${period}: ${summary.totalThisWeek}. The most common:`,
+    count,
+    summary: `${calls} reported to the FTC ${period}, by people in ${name}.`,
   };
 }
 

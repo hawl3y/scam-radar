@@ -22,7 +22,10 @@ export async function TrendingSection({ zip }: { zip: string }) {
           <h2 id="trending-heading" className="text-2xl font-bold">
             {labels.heading}
           </h2>
-          <p className="text-muted">{labels.intro}</p>
+          <p className="text-muted">
+            <span className="text-xl font-bold text-foreground">{labels.count}</span> {labels.summary}
+          </p>
+          <p className="text-sm font-bold text-muted">Most common:</p>
           <ul className="space-y-3">
             {scope.summary.trends.map((trend) => (
               <li key={trend.label} className="rounded-md border-2 border-border bg-surface p-3 sm:p-4">
