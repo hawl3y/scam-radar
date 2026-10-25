@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import QRCode from "qrcode";
-import { PUBLIC_SITE_URL, SITE_NAME, SUPPORT_EMAIL } from "@/lib/site";
+import { Logo } from "@/components/logo";
+import { PUBLIC_SITE_URL, SITE_NAME, SITE_TAGLINE, SUPPORT_EMAIL } from "@/lib/site";
 import { PrintButton } from "./print-button";
 
 export const metadata: Metadata = { title: "Flyer", robots: { index: false } };
@@ -21,8 +22,10 @@ export default async function FlyerPage() {
     <article className="mx-auto max-w-xl space-y-6 rounded-lg bg-white p-6 text-black sm:p-8 print:max-w-none print:space-y-4 print:rounded-none print:p-0">
       <PrintButton />
       <header className="space-y-2 text-center">
-        <h1 className="text-4xl font-bold sm:text-5xl">{SITE_NAME}</h1>
-        <p className="text-xl sm:text-2xl">See what scams are going around near you, and warn your neighbors.</p>
+        <h1>
+          <Logo palette="print" title={SITE_NAME} className="mx-auto h-16 w-auto sm:h-20 print:h-20" />
+        </h1>
+        <p className="whitespace-nowrap text-xl font-bold sm:text-2xl">{SITE_TAGLINE}.</p>
       </header>
 
       <ul className="space-y-3 text-lg sm:text-xl print:space-y-2">
