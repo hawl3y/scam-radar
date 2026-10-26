@@ -1,4 +1,5 @@
 import { crowdLabel } from "@/lib/crowd";
+import { card, escapeHtml, link, paragraph, renderEmail, type EmailBlock, type RenderedEmail } from "@/lib/email/layout";
 import { formatDistance } from "@/lib/format";
 import { defang } from "@/lib/redaction";
 import { CHANNELS, scamTypeInfo, type Channel, type StoredScamType } from "@/lib/scam-types";
@@ -16,11 +17,6 @@ export type EmailCluster = {
 };
 
 export type EmailLinks = { siteUrl: string; prefsUrl: string; homeZip: string | null; source?: "digest" | "instant" };
-
-export type RenderedEmail = { subject: string; html: string; text: string };
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 function alertUrl(cluster: EmailCluster, links: EmailLinks) {
   const params = new URLSearchParams();
@@ -41,70 +37,67 @@ function meta(cluster: EmailCluster, homeZip: string | null) {
   return [CHANNELS[cluster.latest_channel], distance].filter(Boolean).join(" · ");
 }
 
-function clusterHtml(cluster: EmailCluster, links: EmailLinks) {
-  return `
-<div style="border:2px solid #9ca3af;border-radius:8px;padding:16px;margin:0 0 16px">
-  <p style="margin:0 0 4px;font-size:20px;font-weight:700">${escapeHtml(scamTypeInfo(cluster.scam_type).label)}</p>
-  <p style="margin:0 0 4px;font-weight:700">${escapeHtml(crowdLabel(cluster.report_count, cluster.corroboration_count))}</p>
-  <p style="margin:0 0 8px;color:#4b5563">${escapeHtml(meta(cluster, links.homeZip))}</p>
-  <p style="margin:0 0 12px;white-space:pre-wrap">${escapeHtml(excerpt(cluster.latest_description))}</p>
-  <a href="${escapeHtml(alertUrl(cluster, links))}" style="display:inline-block;background:#1d4ed8;color:#ffffff;padding:12px 20px;border-radius:6px;font-weight:700;text-decoration:none">See what to do</a>
-</div>`;
+/** One scam: what it is, who reported it, and what it said. `withLink` adds a "See what to do" link. */
+function clusterCard(cluster: EmailCluster, links: EmailLinks, withLink: boolean): EmailBlock {
+  const label = scamTypeInfo(cluster.scam_type).label;
+  const crowd = crowdLabel(cluster.report_count, cluster.corroboration_count);
+  const blocks: EmailBlock[] = [
+    { html: `<p style="margin:0 0 4px;font-size:20px;line-height:1.3;font-weight:700">${escapeHtml(label)}</p>`, text: label },
+    { html: `<p style="margin:0 0 4px;font-weight:700">${escapeHtml(crowd)}</p>`, text: crowd },
+    paragraph(meta(cluster, links.homeZip), undefined, { muted: true }),
+    { html: `<p style="margin:0 0 12px;white-space:pre-wrap">${escapeHtml(excerpt(cluster.latest_description))}</p>`, text: excerpt(cluster.latest_description) },
+  ];
+  if (withLink) {
+    const url = alertUrl(cluster, links);
+    blocks.push({ html: `<p style="margin:0">${link("See what to do →", url)}</p>`, text: `See what to do: ${url}` });
+  }
+  return card(blocks);
 }
 
-function clusterText(cluster: EmailCluster, links: EmailLinks) {
+function alertFooter(links: EmailLinks, extra: EmailBlock[] = []): EmailBlock[] {
   return [
-    scamTypeInfo(cluster.scam_type).label,
-    crowdLabel(cluster.report_count, cluster.corroboration_count),
-    meta(cluster, links.homeZip),
-    excerpt(cluster.latest_description),
-    `See what to do: ${alertUrl(cluster, links)}`,
-  ].join("\n");
+    ...extra,
+    paragraph("We'll never ask you to sign in or share personal details from an email."),
+    paragraph(
+      `You're getting this because you turned on scam alerts. Change or stop these emails: ${links.prefsUrl}`,
+      `You're getting this because you turned on scam alerts. ${link("Change or stop these emails", links.prefsUrl)}.`,
+    ),
+  ];
 }
 
-const FLYER_INVITE = (siteUrl: string) => ({
-  html: `<p style="margin:24px 0 0">Know a neighbor who'd want this? <a href="${escapeHtml(`${siteUrl}/flyer`)}" style="color:#1d4ed8">Print a ${escapeHtml(SITE_NAME)} flyer</a> for your building, library, or community board.</p>`,
-  text: `Know a neighbor who'd want this? Print a ${SITE_NAME} flyer for your building, library, or community board: ${siteUrl}/flyer`,
-});
-
-function layout(intro: string, body: string, links: EmailLinks) {
-  return `<!doctype html>
-<html lang="en"><body style="margin:0;padding:24px 16px;background:#ffffff;color:#111827;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:1.5">
-<div style="max-width:560px;margin:0 auto">
-  <p style="margin:0 0 16px;font-size:22px;font-weight:700">${escapeHtml(SITE_NAME)}</p>
-  <p style="margin:0 0 20px">${escapeHtml(intro)}</p>
-  ${body}
-  <p style="margin:24px 0 0;color:#4b5563;font-size:15px">We'll never ask you to sign in or share personal details from an email.
-  You're getting this because you turned on scam alerts. <a href="${escapeHtml(links.prefsUrl)}" style="color:#1d4ed8">Change or stop these emails</a>.</p>
-</div></body></html>`;
-}
-
-function textFooter(links: EmailLinks) {
-  return `\n\nWe'll never ask you to sign in or share personal details from an email.\nChange or stop these emails: ${links.prefsUrl}`;
-}
+const flyerInvite = (siteUrl: string): EmailBlock =>
+  paragraph(
+    `Know a neighbor who'd want this? Print a ${SITE_NAME} flyer for your building, library, or community board: ${siteUrl}/flyer`,
+    `Know a neighbor who'd want this? ${link(`Print a ${SITE_NAME} flyer`, `${siteUrl}/flyer`)} for your building, library, or community board.`,
+  );
 
 export function renderInstantEmail(cluster: EmailCluster, baseLinks: EmailLinks): RenderedEmail {
   const links = { ...baseLinks, source: "instant" as const };
   const label = scamTypeInfo(cluster.scam_type).label;
-  const intro = "Several neighbors near you have reported this. Here's what it looks like and what to do.";
-  return {
+  return renderEmail(links.siteUrl, {
     subject: `Scam alert near you: ${label}`,
-    html: layout(intro, clusterHtml(cluster, links), links),
-    text: `${intro}\n\n${clusterText(cluster, links)}${textFooter(links)}`,
-  };
+    heading: "Scam alert near you",
+    blocks: [
+      paragraph("Several neighbors near you have reported this. Here's what it looks like and what to do."),
+      clusterCard(cluster, links, false),
+    ],
+    button: { label: "See what to do", url: alertUrl(cluster, links) },
+    footer: alertFooter(links),
+  });
 }
 
 export function renderDigestEmail(clusters: EmailCluster[], totalItems: number, baseLinks: EmailLinks): RenderedEmail {
   const links = { ...baseLinks, source: "digest" as const };
   const count = totalItems === 1 ? "1 scam" : `${totalItems} scams`;
-  const intro = `Here's what neighbors reported near you recently: ${count}.`;
-  const more =
-    totalItems > clusters.length
-      ? `<p style="margin:0 0 16px"><a href="${escapeHtml(`${links.siteUrl}/?src=digest`)}" style="color:#1d4ed8">See all ${totalItems} in the app</a></p>`
-      : "";
-  return {
+  const more = totalItems > clusters.length ? `See all ${totalItems} in the app` : `Open ${SITE_NAME}`;
+  return renderEmail(links.siteUrl, {
     subject: `${count} reported near you`,
-    html: layout(intro, clusters.map((c) => clusterHtml(c, links)).join("") + more + FLYER_INVITE(links.siteUrl).html, links),
-    text: `${intro}\n\n${clusters.map((c) => clusterText(c, links)).join("\n\n")}\n\n${FLYER_INVITE(links.siteUrl).text}${textFooter(links)}`,
-  };
+    heading: `${count} reported near you`,
+    blocks: [
+      paragraph("Here's what neighbors reported near you recently."),
+      ...clusters.map((c) => clusterCard(c, links, true)),
+    ],
+    button: { label: more, url: `${links.siteUrl}/?src=digest` },
+    footer: alertFooter(links, [flyerInvite(links.siteUrl)]),
+  });
 }
