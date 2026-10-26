@@ -23,6 +23,18 @@
 - Migrations must be backward compatible with the code already in production (add, don't rename or drop in the same change), because the prod migration and the Vercel deploy run at the same time.
 - Small, focused commits on a feature branch, opened as a PR. CI (lint, typecheck, test) must pass; the owner merges to `main` after checking the Vercel preview.
 - Keep `README.md` setup steps current whenever setup changes.
+- Code comments explain non-obvious *why* only (security reasons, tricky logic, known limits). No instructions, setup steps, brief or phase references, or comments that restate the code. Setup goes in `README.md`.
+- Security checklist for every change. Before pushing, check and briefly report on:
+  - input validation and redaction;
+  - injection (SQL, XSS, email);
+  - auth and RLS on any new table or function;
+  - CSRF on new actions or routes;
+  - open redirects;
+  - rate limits on new public endpoints;
+  - no secrets in client code;
+  - safe use of new dependencies.
+
+  Note the results in the PR description (the PR template has the list).
 - When something in the brief is unclear or conflicts with best practice, ask instead of guessing.
 - Keep responses brief: only what's needed.
 

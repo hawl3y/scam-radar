@@ -77,7 +77,7 @@ Migrations must work with the code already in production (add columns/tables; re
 - **Authentication → Emails → SMTP Settings:** custom SMTP via [Resend](https://resend.com).
   - Host `smtp.resend.com`, port `465`, username `resend`, password: a Resend API key.
   - Sender: `no-reply@byebell.com`, name `ByeBell` (domain verified in Resend). Password: a Resend key with sending access for byebell.com.
-- **Authentication → Emails → Templates:** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup** (subject: `Your ByeBell code: {{ .Token }}`), in both the dev and prod projects. Re-paste after any change to the file; it copies the look of `src/lib/email/layout.ts` by hand. Custom templates require custom SMTP.
+- **Authentication → Emails → Templates:** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup** (subject: `Your ByeBell one-time code: {{ .Token }}`), in both the dev and prod projects. Re-paste after any change to the file; it copies the look of `src/lib/email/layout.ts` by hand. Custom templates require custom SMTP.
   - **Both** templates matter: brand-new emails get **Confirm signup**, returning ones get **Magic Link**. If Confirm signup keeps Supabase's default (`{{ .ConfirmationURL }}`, no code), first-time links only work in the browser that asked for them, so they fail in Gmail's in-app browser and show "That sign-in link didn't work."
 
 The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) and a sign-in code. The code is for people using the app from their iPhone home screen, which doesn't share sign-ins with Safari. The code entry is controlled by `SIGN_IN_CODE_ENABLED` in `src/app/login/login-form.tsx`; it must stay in sync with the template.
@@ -91,6 +91,7 @@ The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) a
   - Mark every secret (`SUPABASE_SECRET_KEY`, `RATE_LIMIT_SALT`, `CRON_SECRET`, `EMAIL_TOKEN_SECRET`, `RESEND_API_KEY`, `FTC_API_KEY`) as **Sensitive**.
 - Every branch push gets a preview deploy; `main` deploys to production at **https://byebell.com** (DNS at DreamHost: A record for the apex, CNAME for `www`). `www.byebell.com` and the old **scam-radar.joechawley.com** 308-redirect to byebell.com; keep the old domain attached in Vercel for at least a year (old emails and flyers link to it).
 - Preview deploys are behind Vercel Authentication (Deployment Protection). Sign in to Vercel to view them, including on a phone.
+- **Content-Security-Policy** (`next.config.ts`) is in **report-only** mode: nothing is blocked; browsers report violations to `/api/csp-report`, which logs them without query strings. Review them in Vercel → Logs, searching `csp-violation`. To enforce, rename the header to `Content-Security-Policy` once the logs are clean (previews also allow `vercel.live` for Vercel's toolbar). Production builds only.
 
 ## Alerts (email)
 
@@ -159,7 +160,8 @@ See [PILOT.md](PILOT.md) for the launch checklist, weekly routine, and success c
 1. Branch from `main`: `git checkout -b <feature>`.
 2. If the change includes a migration, apply it to dev: `supabase db push` (CLI linked to dev).
 3. Push the branch and open a pull request. This runs:
-   - **CI** (GitHub Actions): lint, typecheck, unit tests.
+   - **CI** (GitHub Actions): `npm audit` (fails on high severity), lint, typecheck, unit tests.
+   - **Security scans**: CodeQL (TypeScript and workflow files; results under Security → Code scanning) and gitleaks (secrets anywhere in git history). Also run weekly. Keep GitHub's CodeQL "default setup" off, since this workflow replaces it.
    - **Vercel preview** using the dev database.
 4. Test on the preview. When CI is green, merge the PR.
 5. Merging to `main`:
