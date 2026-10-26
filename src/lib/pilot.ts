@@ -1,6 +1,3 @@
-// Pilot success criteria (brief §8 Phase 6), reviewed at weeks 4–8 to decide
-// whether to continue, adjust, or stop.
-
 export type PilotSummary = {
   signups_in_market: number;
   total_signups: number;
@@ -49,7 +46,6 @@ export const PILOT_LAUNCH_WEEK = "2026-10-19";
 
 export const sinceLaunch = (weeks: WeeklyMetrics[]) => weeks.filter((w) => w.week_start >= PILOT_LAUNCH_WEEK);
 
-/** The weekly numbers, grouped for the summary email and the metrics table. */
 export const METRIC_GROUPS: { heading: string; metrics: [keyof Omit<WeeklyMetrics, "week_start">, string][] }[] = [
   { heading: "People", metrics: [["signups", "Sign-ups"], ["active_users", "Active users"], ["returning_users", "Returning"]] },
   {

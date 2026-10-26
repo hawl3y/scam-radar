@@ -1,4 +1,4 @@
-// Per-action limits (brief §8 Phase 4). Keys are hashed before storage.
+// Keys are hashed before storage.
 
 export type RateLimit = { name: string; limit: number; windowSeconds: number };
 

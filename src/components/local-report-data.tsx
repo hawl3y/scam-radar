@@ -11,7 +11,6 @@ function store(): Storage | null {
   }
 }
 
-/** Clears the saved report draft (rendered on the "posted" page). */
 export function ClearReportDraft() {
   useEffect(() => {
     store()?.removeItem(DRAFT_KEY);

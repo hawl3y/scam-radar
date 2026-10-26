@@ -8,7 +8,6 @@ async function adminEmails(): Promise<string[]> {
   return ((data as { email: string }[] | null) ?? []).map((e) => e.email);
 }
 
-/** Tell the owner a report was flagged (and whether it's now auto-hidden). */
 export async function notifyAdminsOfFlag(reportId: string, reason: string, hidden: boolean) {
   const [to, { data: report }] = await Promise.all([
     adminEmails(),

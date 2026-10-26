@@ -1,4 +1,3 @@
-// Emails to admins: the weekly pilot summary, flag notices, and operational warnings.
 import { defang } from "@/lib/redaction";
 import { criterionMark, evaluatePilot, METRIC_GROUPS, weekLabel, type PilotSummary, type WeeklyMetrics } from "@/lib/pilot";
 import { SITE_NAME } from "@/lib/site";
@@ -16,7 +15,6 @@ export function renderAdminEmail(siteUrl: string, email: AdminEmail): RenderedEm
   });
 }
 
-/** A short bulleted list, one item per line. */
 export function list(items: string[]): EmailBlock {
   return {
     html: `<ul style="margin:0 0 16px;padding-left:22px">${items.map((i) => `<li style="margin:0 0 8px">${escapeHtml(i)}</li>`).join("")}</ul>`,

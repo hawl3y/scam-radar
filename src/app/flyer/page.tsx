@@ -13,7 +13,6 @@ async function qrSvg(url: string) {
   return QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } });
 }
 
-// Print-friendly flyer for the library, senior center, and local groups.
 export default async function FlyerPage() {
   const svg = await qrSvg(PUBLIC_SITE_URL);
   const displayUrl = PUBLIC_SITE_URL.replace(/^https:\/\//, "");

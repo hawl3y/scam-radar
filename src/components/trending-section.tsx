@@ -5,7 +5,6 @@ import { getHeadlines, getMarketForZip, getStateTrendSummary, getTrendSummary, g
 const shortDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(value));
 
-/** FTC unwanted-call trends for the viewer's state (or market), plus FBI headlines. */
 export async function TrendingSection({ zip }: { zip: string }) {
   const [state, market, headlines] = await Promise.all([getZipState(zip), getMarketForZip(zip), getHeadlines(3)]);
   const [marketSummary, stateSummary] = await Promise.all([

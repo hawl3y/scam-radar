@@ -2,8 +2,7 @@ import { linkPattern, trimLink } from "./links";
 
 export { defang } from "./links";
 
-// Rules-based redaction (brief §7: redact before saving). The reporter reviews
-// and can edit the result before it's posted. AI redaction is added in Phase 2.
+// Rules-based. The reporter reviews and can edit the result before it's posted.
 
 export type RedactionKind = "email" | "phone" | "card" | "account" | "ssn" | "code" | "address" | "name";
 

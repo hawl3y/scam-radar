@@ -15,7 +15,6 @@ export async function getPilotMetrics(weeks = 8): Promise<{ summary: PilotSummar
   return { summary: (summary as PilotSummary[])[0], weeks: weekly as WeeklyMetrics[] };
 }
 
-/** Monday summary email to admins: the targets, then last full week by group. */
 export async function sendWeeklyPilotEmail() {
   const { summary, weeks } = await getPilotMetrics(2);
   const email = weeklySummaryEmail(summary, weeks, siteUrl());

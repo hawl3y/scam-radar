@@ -1,5 +1,4 @@
 // Calibrates matching thresholds against real pg_trgm on the linked (dev) project.
-// Usage: node scripts/calibrate-matching.mts
 // Requires the Supabase CLI linked to dev. Read-only: runs one SELECT.
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";

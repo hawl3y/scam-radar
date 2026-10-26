@@ -38,7 +38,6 @@ export function WeeklyTable({ weeks }: { weeks: WeeklyMetrics[] }) {
         Show all columns
       </label>
 
-      {/* Phones: one card per week. */}
       <ul className="space-y-3 sm:hidden">
         {weeks.map((w, i) => (
           <li key={w.week_start} className="rounded-xl border-2 border-border p-4">
@@ -55,7 +54,6 @@ export function WeeklyTable({ weeks }: { weeks: WeeklyMetrics[] }) {
         ))}
       </ul>
 
-      {/* Wider screens: a table with the Week column pinned while scrolling sideways. */}
       <div className="hidden overflow-x-auto rounded-xl border-2 border-border sm:block">
         <table className="min-w-full border-collapse text-left">
           <thead>

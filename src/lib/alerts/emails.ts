@@ -37,7 +37,6 @@ function meta(cluster: EmailCluster, homeZip: string | null) {
   return [CHANNELS[cluster.latest_channel], distance].filter(Boolean).join(" · ");
 }
 
-/** One scam: what it is, who reported it, and what it said. `withLink` adds a "See what to do" link. */
 function clusterCard(cluster: EmailCluster, links: EmailLinks, withLink: boolean): EmailBlock {
   const label = scamTypeInfo(cluster.scam_type).label;
   const crowd = crowdLabel(cluster.report_count, cluster.corroboration_count);

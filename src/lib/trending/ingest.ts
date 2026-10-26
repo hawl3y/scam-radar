@@ -196,7 +196,6 @@ async function ingestStates(apiKey: string, today: string, deadline: number, pri
   const rotated = [...codes.slice(offset), ...codes.slice(0, offset)];
   const ordered = [...new Set([...priority.filter((c) => c in STATE_NAMES), ...rotated])];
 
-  // Skip states already fetched recently (earlier runs today).
   const { data: status, error: statusError } = await createAdminClient().rpc("dnc_state_ingest_status", {
     p_since: fromDay,
   });
@@ -270,7 +269,6 @@ async function ingestIc3() {
   return { headlines: headlines.length };
 }
 
-/** Daily: FTC Do Not Call counts (markets by area code, every state), and IC3 headlines. */
 export async function runIngest(now = new Date()) {
   const [dnc, ic3] = await Promise.allSettled([ingestDnc(now), ingestIc3()]);
   return {

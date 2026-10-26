@@ -1,8 +1,6 @@
 import { SITE_NAME } from "@/lib/site";
 
-// ByeBell logo, recolored with the site theme tokens (accent / accent-foreground),
-// so it follows light and dark mode. Wordmark outlines: Nunito Black (OFL) with
-// straight "ll" bars, matching the original artwork.
+// Wordmark outlines: Nunito Black (OFL) with straight "ll" bars, matching the original artwork.
 
 const BELL = "M44.6 21.4 A3.9 3.9 0 1 1 51.9 21.4 C62.5 23.4 69.6 31.2 70.6 42.6 C71.2 50.2 72.4 55.6 77.2 60.6";
 const BASE = "M80.4 61.6 Q81 66.6 76.4 66.6 L40 66.6 L22.8 78.2 L24.2 67.4 Q17.4 65.2 19.2 61.2 C23.6 55.4 24.8 50 25.4 42.6 C26.4 31.2 34 23.4 44.6 21.4";
@@ -38,7 +36,6 @@ function Mark({ palette }: { palette: Palette }) {
 
 type LogoProps = { className?: string; title?: string; palette?: Palette };
 
-/** Full logo: icon plus "ByeBell" wordmark. */
 export function Logo({ className, title = SITE_NAME, palette = "theme" }: LogoProps) {
   return (
     <svg viewBox="0 0 408 100" role="img" aria-label={title} className={className}>
@@ -48,7 +45,6 @@ export function Logo({ className, title = SITE_NAME, palette = "theme" }: LogoPr
   );
 }
 
-/** Icon only. */
 export function LogoMark({ className, title = SITE_NAME, palette = "theme" }: LogoProps) {
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={title} className={className}>

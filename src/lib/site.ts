@@ -1,6 +1,4 @@
-// Name, domain, and email addresses live here. Renaming? See "Rename / new
-// domain checklist" in PILOT.md for everything outside the code.
-// Name, tagline, production URL, and email addresses. The repo and infrastructure keep "scam-radar".
+// The repo and infrastructure names keep "scam-radar".
 export const SITE_NAME = "ByeBell";
 /** Home hero headline and link-preview line. */
 export const SITE_TAGLINE = "Ring the bell on scams";

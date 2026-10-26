@@ -1,7 +1,5 @@
-// Shared look for every ByeBell email: brand header, clear heading, short
-// grouped sections with generous spacing, at most one primary button, and a
-// small footer. Table-based and inline-styled so it holds up in Gmail, Outlook,
-// and Apple Mail, and fits a phone screen. Each piece also has a plain-text form.
+// Table-based and inline-styled so it holds up in Gmail, Outlook, and Apple Mail.
+// supabase/templates/sign-in.html copies this look by hand.
 import { SITE_NAME } from "@/lib/site";
 
 export type RenderedEmail = { subject: string; html: string; text: string };
@@ -31,7 +29,6 @@ export function paragraph(text: string, html = escapeHtml(text), opts: { muted?:
   return { html: `<p style="margin:0 0 16px;${color}">${html}</p>`, text };
 }
 
-/** A short heading over a group of blocks. */
 export function group(heading: string, blocks: EmailBlock[]): EmailBlock {
   return {
     html: `<h2 style="margin:32px 0 8px;font-size:14px;line-height:1.4;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${COLORS.muted}">${escapeHtml(heading)}</h2>${blocks.map((b) => b.html).join("")}`,
@@ -39,7 +36,6 @@ export function group(heading: string, blocks: EmailBlock[]): EmailBlock {
   };
 }
 
-/** One label and value per line. */
 export function rows(items: [label: string, value: string | number][]): EmailBlock {
   const cell = `padding:12px 0;border-bottom:1px solid ${COLORS.border};vertical-align:top`;
   return {
@@ -53,7 +49,6 @@ export function rows(items: [label: string, value: string | number][]): EmailBlo
   };
 }
 
-/** A bordered card, e.g. one scam in an alert. */
 export function card(blocks: EmailBlock[]): EmailBlock {
   return {
     html: `<div style="border:1px solid ${COLORS.border};border-radius:10px;padding:16px 18px;margin:0 0 16px">${blocks.map((b) => b.html).join("")}</div>`,
@@ -71,7 +66,6 @@ export type EmailContent = {
   blocks: EmailBlock[];
   /** The one primary action, if any. */
   button?: EmailButton;
-  /** Small print under the card. */
   footer: EmailBlock[];
 };
 

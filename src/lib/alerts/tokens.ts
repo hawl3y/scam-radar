@@ -17,7 +17,6 @@ export function createPrefsToken(userId: string, key = secret()): string {
   return `${Buffer.from(userId).toString("base64url")}.${sign(userId, key)}`;
 }
 
-/** The user id if the token is valid, otherwise null. */
 export function verifyPrefsToken(token: string | null | undefined, key = secret()): string | null {
   if (!token) return null;
   const [encoded, signature, extra] = token.split(".");

@@ -9,10 +9,6 @@ import { runIngest } from "@/lib/trending/ingest";
 
 export const maxDuration = 300;
 
-// Called every 15 minutes on weekday afternoons by GitHub Actions
-// (.github/workflows/ingest.yml), and daily at 18:00 UTC by Vercel Cron as a
-// backup. Runs after the FTC's weekday update (~noon Eastern) and skips work
-// already done.
 export async function GET(request: NextRequest) {
   if (!isCronRequest(request)) return new NextResponse("Unauthorized", { status: 401 });
   const result = await runIngest();

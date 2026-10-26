@@ -1,5 +1,4 @@
-// Alert rules (brief §8 Phase 3). Pure functions; the database enforces the
-// same limits atomically when a send is claimed.
+// The database enforces these same limits atomically when a send is claimed.
 
 const envThreshold = Number(process.env.ALERT_INSTANT_THRESHOLD);
 
@@ -16,14 +15,12 @@ export const INSTANT_DAILY_LIMIT = 3;
 /** Digest covers clusters active in this window (a bit over a day, for cron timing drift). */
 export const DIGEST_WINDOW_HOURS = 36;
 
-/** Max clusters listed in one digest. */
 export const DIGEST_MAX_ITEMS = 10;
 
 export function isHot(signal: number, threshold = INSTANT_THRESHOLD): boolean {
   return Number.isFinite(signal) && signal >= threshold;
 }
 
-/** Recipients still under the daily instant limit. */
 export function underInstantLimit<T extends { instant_last_24h: number }>(recipients: T[], limit = INSTANT_DAILY_LIMIT): T[] {
   return recipients.filter((r) => r.instant_last_24h < limit);
 }

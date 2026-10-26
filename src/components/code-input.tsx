@@ -16,10 +16,6 @@ type Props = {
   autoFocus?: boolean;
 };
 
-/**
- * The sign-in code field: numeric keypad, one-time-code autofill, a Paste code
- * button, and auto-submit once 6 digits are in.
- */
 export function CodeInput({ className, submitIntent, disabled, autoFocus }: Props) {
   const [code, setCode] = useState("");
   const canPaste = useSyncExternalStore(noSubscribe, clipboardReadable, () => false);
