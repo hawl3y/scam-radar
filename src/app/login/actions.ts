@@ -8,7 +8,7 @@ import { emailSchema, sendSignInEmail, verifySignInCode } from "@/lib/otp";
 // from a sign-in link that didn't work); the form then asks for it.
 export type LoginState =
   | { step: "email"; error?: string }
-  | { step: "code"; email: string | null; error?: string };
+  | { step: "code"; email: string | null; error?: string; enteredEmail?: string };
 
 async function sendLink(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const email = emailSchema.safeParse(String(formData.get("email") ?? "").trim());
@@ -27,7 +27,8 @@ async function verifyCode(prev: LoginState, formData: FormData): Promise<LoginSt
     return { ...prev, error: "Enter the email address the code was sent to." };
   }
   const error = await verifySignInCode(email, String(formData.get("code") ?? ""));
-  if (error) return { ...prev, error };
+  // Keep a typed email so the field refills after React resets the form.
+  if (error) return { ...prev, error, enteredEmail: prev.email ? undefined : email };
 
   redirect(await postLoginPath(String(formData.get("next") ?? "/")));
 }

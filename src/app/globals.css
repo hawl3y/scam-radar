@@ -10,7 +10,6 @@
   --danger: #b91c1c;
 }
 
-/* Surfaces mixed from the theme tokens above (no new colors). */
 :root {
   --canvas: color-mix(in srgb, var(--foreground) 4%, var(--background));
   --surface: var(--background);
@@ -31,7 +30,6 @@
   --color-surface: var(--surface);
   --color-tint: var(--tint);
   --color-footer: var(--footer);
-  /* One corner radius for controls and cards; larger containers use rounded-2xl. */
   --radius-md: 0.75rem;
   --radius-lg: 0.75rem;
 }
@@ -45,7 +43,6 @@
     --accent: #93c5fd;
     --accent-foreground: #0b1220;
     --danger: #fca5a5;
-    /* In dark mode, content areas sit slightly lighter than the page. */
     --canvas: var(--background);
     --surface: color-mix(in srgb, var(--foreground) 6%, var(--background));
     --tint: color-mix(in srgb, var(--accent) 14%, var(--background));

@@ -1,7 +1,7 @@
 import "server-only";
 import { Resend } from "resend";
+import type { RenderedEmail } from "@/lib/email/layout";
 import { ALERTS_FROM_EMAIL, SITE_NAME } from "@/lib/site";
-import type { RenderedEmail } from "./emails";
 import { createPrefsToken } from "./tokens";
 
 const FROM = `${SITE_NAME} <${ALERTS_FROM_EMAIL}>`;
@@ -50,8 +50,10 @@ export async function sendAlertEmail(to: string, email: RenderedEmail, unsubscri
   if (error) throw new Error(`Resend send failed: ${error.message}`);
 }
 
-/** Plain-text operational email (e.g. to admins). Throws on failure. */
-export async function sendPlainEmail(to: string[], subject: string, text: string, idempotencyKey: string) {
-  const { error } = await resend().emails.send({ from: FROM, to, subject, text }, { idempotencyKey });
+export async function sendAdminEmail(to: string[], email: RenderedEmail, idempotencyKey: string) {
+  const { error } = await resend().emails.send(
+    { from: FROM, to, subject: email.subject, html: email.html, text: email.text },
+    { idempotencyKey },
+  );
   if (error) throw new Error(`Resend send failed: ${error.message}`);
 }

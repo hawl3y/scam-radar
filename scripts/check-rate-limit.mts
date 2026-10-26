@@ -1,5 +1,4 @@
 // Verifies hit_rate_limit blocks the call after the limit, on the linked (dev) project.
-// Usage: node scripts/check-rate-limit.mts
 // Uses a throwaway key and deletes it afterwards.
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";

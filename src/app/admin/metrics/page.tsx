@@ -3,29 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EMAIL_DAILY_BUDGET } from "@/lib/alerts/budget";
-import { evaluatePilot, type WeeklyMetrics } from "@/lib/pilot";
+import { criterionMark, evaluatePilot, sinceLaunch, type CriterionResult } from "@/lib/pilot";
 import { getPilotMetrics } from "@/lib/pilot-report";
 import { createClient } from "@/lib/supabase/server";
+import { WeeklyTable } from "./weekly-table";
 
 export const metadata: Metadata = { title: "Pilot metrics", robots: { index: false } };
-
-const COLUMNS: [keyof WeeklyMetrics, string][] = [
-  ["signups", "Sign-ups"],
-  ["active_users", "Active users"],
-  ["returning_users", "Returning"],
-  ["reports", "Reports"],
-  ["new_clusters", "New alerts"],
-  ["corroborations", "Got this too"],
-  ["checks", "Checks"],
-  ["feed_views", "Feed views"],
-  ["shares", "Shares"],
-  ["instant_emails", "Instant emails"],
-  ["digest_emails", "Digests"],
-  ["email_visits", "Visits from email"],
-  ["unsubscribes", "Emails off"],
-  ["flags", "Flags"],
-  ["removals", "Removals"],
-];
 
 export default function MetricsPage() {
   return (
@@ -43,28 +26,20 @@ async function Metrics() {
   const { data: isAdmin } = await supabase.rpc("is_admin");
   if (isAdmin !== true) notFound();
 
-  const { summary, weeks } = await getPilotMetrics(8);
+  const { summary, weeks } = await getPilotMetrics(26);
   const criteria = evaluatePilot(summary, weeks);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <Link href="/admin" className="inline-flex min-h-12 items-center underline">
         Back to reports
       </Link>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <h2 className="text-2xl font-bold">Targets</h2>
-        <ul className="space-y-2">
+        <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {criteria.map((c) => (
-            <li key={c.label} className="flex flex-wrap items-baseline gap-x-3 rounded-md border-2 border-border p-3">
-              <span aria-hidden className="text-lg">
-                {c.met === null ? "·" : c.met ? "✓" : "✗"}
-              </span>
-              <span className="font-bold">{c.label}:</span>
-              <span>{c.value}</span>
-              <span className="text-muted">target {c.target}</span>
-              <span className="sr-only">{c.met === null ? "not enough data" : c.met ? "met" : "not met"}</span>
-            </li>
+            <TargetCard key={c.label} c={c} />
           ))}
         </ul>
         <p className="text-muted">
@@ -72,38 +47,39 @@ async function Metrics() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <h2 className="text-2xl font-bold">By week</h2>
-        <p className="text-muted">Weeks start Monday (Eastern). The top row is the current, partial week.</p>
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-left">
-            <thead>
-              <tr>
-                <th scope="col" className="border-b-2 border-border p-2">Week of</th>
-                {COLUMNS.map(([key, label]) => (
-                  <th key={key} scope="col" className="border-b-2 border-border p-2">
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {weeks.map((w) => (
-                <tr key={w.week_start}>
-                  <th scope="row" className="border-b border-border p-2 font-bold whitespace-nowrap">
-                    {w.week_start}
-                  </th>
-                  {COLUMNS.map(([key]) => (
-                    <td key={key} className="border-b border-border p-2">
-                      {w[key]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <p className="text-muted">
+          Weeks since launch, newest first. Weeks start Monday (Eastern). &ldquo;Got this too&rdquo; counts every press,
+          including on alerts later hidden or removed; the target card counts only alerts that are still visible.
+        </p>
+        <WeeklyTable weeks={sinceLaunch(weeks)} />
       </div>
     </div>
+  );
+}
+
+function TargetCard({ c }: { c: CriterionResult }) {
+  const status = c.met === null ? "Not enough data" : c.met ? "Met" : "Not met";
+  return (
+    <li className="flex flex-col gap-2 rounded-xl border-2 border-border bg-surface p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-3xl font-bold tabular-nums">{c.value}</p>
+        <span
+          className={`text-2xl font-bold ${c.met === null ? "text-muted" : c.met ? "text-accent" : "text-danger"}`}
+          aria-hidden
+        >
+          {criterionMark(c.met)}
+        </span>
+      </div>
+      <h3 className="font-bold leading-snug">
+        {c.label}
+        <span className="sr-only">. {status}.</span>
+      </h3>
+      <div className="mt-auto space-y-1 pt-1">
+        <p className="text-muted">Target {c.target}</p>
+        <p className="text-sm text-muted">{c.detail}</p>
+      </div>
+    </li>
   );
 }

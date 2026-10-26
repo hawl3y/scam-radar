@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 
 export type DeleteState = { error?: string };
 
-/** Deletes the account and everything tied to it (reports, "got this too", ratings, flags). */
 export async function deleteAccount(_prev: DeleteState, formData: FormData): Promise<DeleteState> {
   if (formData.get("confirm") !== "yes") return { error: "Please tick the box to confirm." };
 

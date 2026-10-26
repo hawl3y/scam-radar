@@ -50,7 +50,7 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 
 ## Success criteria (weeks 4–8)
 
-Shown on `/admin/metrics` and in the weekly email. Defined in `src/lib/pilot.ts`.
+Shown on `/admin/metrics` and in the weekly email. Defined in `src/lib/pilot.ts`, along with the launch week (`PILOT_LAUNCH_WEEK`; the metrics table starts there). Every email shares one layout, `src/lib/email/layout.ts`; the sign-in template copies its look (README → Auth settings has the paste steps).
 
 | Measure | Target |
 |---|---|
@@ -70,7 +70,7 @@ Use this for any future rename or domain change too. Keep the old domain working
 
 **1. Code** (one file, then a PR)
 - [ ] `src/lib/site.ts`: `SITE_NAME`, `PUBLIC_SITE_URL`, `ALERTS_FROM_EMAIL`, and `SUPPORT_EMAIL` if it changes. Page titles, the manifest, emails, legal pages, the flyer, and admin email subjects all read from here.
-- [ ] `supabase/templates/sign-in.html`: the name in the heading and the subject comment (then re-paste it in Supabase; step 4).
+- [ ] `supabase/templates/sign-in.html`: the name in the heading and the brand link (then re-paste it in Supabase; step 4). The subject is set in Supabase, as in README.
 - [ ] App icons if the logo changes: `public/icon-192.png`, `public/icon-512.png`, `public/icon-512-maskable.png`, `src/app/icon.png`, `src/app/apple-icon.png`.
 - [ ] Docs: `README.md`, `CLAUDE.md`, `PROJECT_BRIEF.md`, this file, and the comment in `.env.example`.
 - [ ] Optional, cosmetic: `package.json` `name`, `supabase/config.toml` `project_id`, the IC3 `User-Agent` in `src/lib/trending/ingest.ts`. Leave the `scam-radar:last-feed-visit` storage key in `src/components/feed-list.tsx` alone; changing it resets everyone's "new" labels.

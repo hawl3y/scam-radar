@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { CodeInput } from "@/components/code-input";
 import { suggestScamType } from "@/lib/classify";
 import { defang, type RedactionKind } from "@/lib/redaction";
 import { DRAFT_KEY, LAST_ZIP_KEY, parseDraft, saveDraft, type StoredDraft } from "@/lib/report-draft";
@@ -375,14 +376,7 @@ function SignInPanel({ onSignedIn }: { onSignedIn: () => void }) {
           </p>
           <label className="block space-y-2">
             <span className="block font-bold">Code from the email</span>
-            <input
-              name="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              required
-              autoFocus
-              className={`${inputClass} tracking-widest`}
-            />
+            <CodeInput className={inputClass} submitIntent="verify" disabled={pending} autoFocus />
           </label>
           {state.error && (
             <p role="alert" className="text-danger">

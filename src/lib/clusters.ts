@@ -44,7 +44,6 @@ export type ClusterExample = {
   created_at: string;
 };
 
-/** Put a newly inserted report into the best matching cluster, or a new one. */
 export async function assignCluster(reportId: string): Promise<string> {
   const admin = createAdminClient();
   const { data: candidates, error } = await admin.rpc("nearest_cluster_candidate", {

@@ -2,15 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { notifyAdmins } from "@/lib/alerts/admin-notify";
 import { easternDate } from "@/lib/alerts/policy";
 import { isCronRequest } from "@/lib/cron-auth";
+import { INGEST_RUNS_URL, list } from "@/lib/email/admin";
+import { paragraph } from "@/lib/email/layout";
 import { SITE_NAME } from "@/lib/site";
 import { runIngest } from "@/lib/trending/ingest";
 
 export const maxDuration = 300;
 
-// Called every 15 minutes on weekday afternoons by GitHub Actions
-// (.github/workflows/ingest.yml), and daily at 18:00 UTC by Vercel Cron as a
-// backup. Runs after the FTC's weekday update (~noon Eastern) and skips work
-// already done.
 export async function GET(request: NextRequest) {
   if (!isCronRequest(request)) return new NextResponse("Unauthorized", { status: 401 });
   const result = await runIngest();
@@ -28,8 +26,12 @@ export async function GET(request: NextRequest) {
 
   if (problems.length > 0) {
     await notifyAdmins(
-      `${SITE_NAME} data import had problems`,
-      problems.join("\n"),
+      {
+        subject: `${SITE_NAME} data import had problems`,
+        heading: "Data import had problems",
+        blocks: [list(problems), paragraph("The run logs show the full result.")],
+        button: { label: "Open ingest runs", url: INGEST_RUNS_URL },
+      },
       `ingest-${easternDate(new Date())}`,
     ).catch((e) => console.error("notify failed", e));
   }

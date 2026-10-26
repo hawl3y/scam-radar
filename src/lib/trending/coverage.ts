@@ -1,5 +1,7 @@
 import "server-only";
 import { notifyAdmins } from "@/lib/alerts/admin-notify";
+import { INGEST_RUNS_URL, list } from "@/lib/email/admin";
+import { paragraph } from "@/lib/email/layout";
 import { SITE_NAME } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -17,11 +19,18 @@ export async function checkTrendCoverage(today: string) {
   const problems = [
     row.market_codes_stale.length > 0 ? `Market area codes not fetched in the last day: ${row.market_codes_stale.join(", ")}` : null,
     row.states_fresh < MIN_FRESH_STATES ? `Only ${row.states_fresh} of 52 states fetched in the last day (expected ${MIN_FRESH_STATES}+)` : null,
-  ].filter(Boolean);
+  ].filter((p): p is string => p !== null);
   if (problems.length === 0) return;
   await notifyAdmins(
-    `${SITE_NAME} trend data is behind`,
-    [...problems, "", "Check the Ingest FTC data workflow runs on GitHub and the Vercel cron logs."].join("\n"),
+    {
+      subject: `${SITE_NAME} trend data is behind`,
+      heading: "Trend data is behind",
+      blocks: [
+        list(problems),
+        paragraph("Check the Ingest FTC data workflow runs on GitHub and the Vercel cron logs."),
+      ],
+      button: { label: "Open ingest runs", url: INGEST_RUNS_URL },
+    },
     `coverage-${today}`,
   );
 }

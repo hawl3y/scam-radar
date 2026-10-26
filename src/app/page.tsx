@@ -30,7 +30,6 @@ export default function Home({ searchParams }: PageProps<"/">) {
         <DeletedNotice searchParams={searchParams} />
       </Suspense>
 
-      {/* Hero: stacked on mobile; text left and actions right on wide screens. */}
       <div className="grid gap-5 rounded-2xl bg-tint p-4 sm:p-8 lg:grid-cols-2 lg:items-center lg:gap-12 lg:p-10">
         <div className="space-y-3">
           <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">{SITE_TAGLINE}</h1>
@@ -70,7 +69,6 @@ async function DeletedNotice({ searchParams }: Pick<PageProps<"/">, "searchParam
   );
 }
 
-/** Hero left column: what this is, or where the feed is centered. */
 async function HeroText({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const { zip } = await searchParams;
   const viewer = await getViewer(zip);
@@ -108,7 +106,6 @@ async function HeroText({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
   );
 }
 
-/** Hero right column: the zip field, only for signed-out visitors without one. */
 async function HeroZip({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const { zip } = await searchParams;
   const viewer = await getViewer(zip);
@@ -167,7 +164,6 @@ async function Feed({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   );
 }
 
-// Simple line icons, colored with the accent token.
 const ICON_PROPS = {
   viewBox: "0 0 24 24",
   fill: "none",
