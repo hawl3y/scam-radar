@@ -31,7 +31,56 @@ export type WeeklyMetrics = {
   removals: number;
 };
 
-export type CriterionResult = { label: string; value: string; target: string; met: boolean | null };
+/**
+ * `value` is the headline number; `progress` is one line for emails (e.g. "4 of 50");
+ * `detail` gives the counts behind a percentage.
+ */
+export type CriterionResult = {
+  label: string;
+  value: string;
+  target: string;
+  progress: string;
+  detail: string | null;
+  met: boolean | null;
+};
+
+/** Monday of the pilot's launch week (Phase 6 went live Oct 23, 2026). Earlier weeks are pre-launch testing. */
+export const PILOT_LAUNCH_WEEK = "2026-10-19";
+
+export const sinceLaunch = (weeks: WeeklyMetrics[]) => weeks.filter((w) => w.week_start >= PILOT_LAUNCH_WEEK);
+
+/** The weekly numbers, grouped for the summary email and the metrics table. */
+export const METRIC_GROUPS: { heading: string; metrics: [keyof Omit<WeeklyMetrics, "week_start">, string][] }[] = [
+  { heading: "People", metrics: [["signups", "Sign-ups"], ["active_users", "Active users"], ["returning_users", "Returning"]] },
+  {
+    heading: "Activity",
+    metrics: [
+      ["reports", "Reports"],
+      ["new_clusters", "New alerts"],
+      ["corroborations", "Got this too"],
+      ["checks", "Checks"],
+      ["feed_views", "Feed views"],
+      ["shares", "Shares"],
+    ],
+  },
+  {
+    heading: "Email",
+    metrics: [
+      ["instant_emails", "Instant emails"],
+      ["digest_emails", "Digests"],
+      ["email_visits", "Visits from email"],
+      ["unsubscribes", "Turned off emails"],
+    ],
+  },
+  { heading: "Moderation", metrics: [["flags", "Flags"], ["removals", "Removals"]] },
+];
+
+/** "Oct 19" for a week starting 2026-10-19. */
+export const weekLabel = (weekStart: string) =>
+  new Date(`${weekStart}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
+/** ✓ met, ✗ not met, – not enough data. */
+export const criterionMark = (met: boolean | null) => (met === null ? "–" : met ? "✓" : "✗");
 
 export const PILOT_TARGETS = {
   signupsInMarket: 50,
@@ -44,43 +93,64 @@ export const PILOT_TARGETS = {
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 const ratio = (num: number, den: number) => (den > 0 ? num / den : null);
 
+function rateResult(label: string, num: number, den: number, noun: string, target: string, met: (r: number) => boolean): CriterionResult {
+  const r = ratio(num, den);
+  const detail = r === null ? null : `${num} of ${den} ${noun}`;
+  return {
+    label,
+    value: r === null ? "—" : pct(r),
+    target,
+    progress: r === null ? `No data yet · target ${target}` : `${pct(r)} (${detail}) · target ${target}`,
+    detail,
+    met: r === null ? null : met(r),
+  };
+}
+
 /** Evaluate the targets. `weeks` is newest first; the first entry is the current, partial week. */
 export function evaluatePilot(summary: PilotSummary, weeks: WeeklyMetrics[]): CriterionResult[] {
   const lastFullWeek = weeks[1];
-  const corroboration = ratio(summary.clusters_corroborated, summary.clusters_with_reports);
-  const returning = ratio(summary.users_returning, summary.users_with_activity);
-  const unsubscribe = ratio(summary.profiles_off, summary.profiles_total);
+  const { signupsInMarket, reportsPerWeek, corroborationRate, returningRate, unsubscribeRateBelow } = PILOT_TARGETS;
 
   return [
     {
       label: "Sign-ups in the test area",
       value: String(summary.signups_in_market),
-      target: `${PILOT_TARGETS.signupsInMarket}+`,
-      met: summary.signups_in_market >= PILOT_TARGETS.signupsInMarket,
+      target: `${signupsInMarket}+`,
+      progress: `${summary.signups_in_market} of ${signupsInMarket}`,
+      detail: null,
+      met: summary.signups_in_market >= signupsInMarket,
     },
     {
       label: "New reports last full week",
       value: lastFullWeek ? String(lastFullWeek.reports) : "—",
-      target: `${PILOT_TARGETS.reportsPerWeek}+ by week 4`,
-      met: lastFullWeek ? lastFullWeek.reports >= PILOT_TARGETS.reportsPerWeek : null,
+      target: `${reportsPerWeek}+ by week 4`,
+      progress: lastFullWeek ? `${lastFullWeek.reports} of ${reportsPerWeek}` : "No full week yet",
+      detail: null,
+      met: lastFullWeek ? lastFullWeek.reports >= reportsPerWeek : null,
     },
-    {
-      label: "Alerts with an “I got this too”",
-      value: corroboration === null ? "—" : pct(corroboration),
-      target: `${pct(PILOT_TARGETS.corroborationRate)}+`,
-      met: corroboration === null ? null : corroboration >= PILOT_TARGETS.corroborationRate,
-    },
-    {
-      label: "Users who came back in a later week",
-      value: returning === null ? "—" : pct(returning),
-      target: `${pct(PILOT_TARGETS.returningRate)}+`,
-      met: returning === null ? null : returning >= PILOT_TARGETS.returningRate,
-    },
-    {
-      label: "Turned off emails",
-      value: unsubscribe === null ? "—" : pct(unsubscribe),
-      target: `under ${pct(PILOT_TARGETS.unsubscribeRateBelow)}`,
-      met: unsubscribe === null ? null : unsubscribe < PILOT_TARGETS.unsubscribeRateBelow,
-    },
+    rateResult(
+      "Alerts with an “I got this too”",
+      summary.clusters_corroborated,
+      summary.clusters_with_reports,
+      "alerts",
+      `${pct(corroborationRate)}+`,
+      (r) => r >= corroborationRate,
+    ),
+    rateResult(
+      "Users who came back in a later week",
+      summary.users_returning,
+      summary.users_with_activity,
+      "users",
+      `${pct(returningRate)}+`,
+      (r) => r >= returningRate,
+    ),
+    rateResult(
+      "Turned off emails",
+      summary.profiles_off,
+      summary.profiles_total,
+      "people",
+      `under ${pct(unsubscribeRateBelow)}`,
+      (r) => r < unsubscribeRateBelow,
+    ),
   ];
 }

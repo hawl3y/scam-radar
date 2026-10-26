@@ -3,6 +3,7 @@ import { notifyAdmins } from "@/lib/alerts/admin-notify";
 import { runDigest } from "@/lib/alerts/digest";
 import { easternDate } from "@/lib/alerts/policy";
 import { isCronRequest } from "@/lib/cron-auth";
+import { paragraph, rows } from "@/lib/email/layout";
 import { sendWeeklyPilotEmail } from "@/lib/pilot-report";
 import { SITE_NAME } from "@/lib/site";
 import { checkTrendCoverage } from "@/lib/trending/coverage";
@@ -19,14 +20,33 @@ export async function GET(request: NextRequest) {
   try {
     result = await runDigest(now);
   } catch (e) {
-    await notifyAdmins(`${SITE_NAME} digest failed`, String(e), `digest-error-${today}`).catch(() => {});
+    await notifyAdmins(
+      {
+        subject: `${SITE_NAME} digest failed`,
+        heading: "The daily digest failed",
+        blocks: [paragraph("No digest emails went out. The error:"), paragraph(String(e), undefined, { muted: true })],
+      },
+      `digest-error-${today}`,
+    ).catch(() => {});
     throw e;
   }
   console.log("digest", result);
   if (result.failed > 0) {
     await notifyAdmins(
-      `${SITE_NAME} digest had failures`,
-      `${result.failed} digest email(s) failed today and will be retried tomorrow.\n\n${JSON.stringify(result)}`,
+      {
+        subject: `${SITE_NAME} digest had failures`,
+        heading: "Some digest emails failed",
+        blocks: [
+          paragraph(`${result.failed} digest email${result.failed === 1 ? "" : "s"} failed today and will be retried tomorrow.`),
+          rows([
+            ["People due a digest", result.users],
+            ["Sent", result.sent],
+            ["Skipped", result.skipped],
+            ["Failed", result.failed],
+            ["Held by the daily limit", result.overBudget],
+          ]),
+        ],
+      },
       `digest-failed-${today}`,
     ).catch((e) => console.error("notify failed", e));
   }

@@ -1,4 +1,5 @@
 import "server-only";
+import { group, paragraph } from "@/lib/email/layout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAdmins } from "./admin-notify";
 import { easternDate } from "./policy";
@@ -25,15 +26,20 @@ export async function alertEmailsRemaining(): Promise<number> {
 export async function warnBudgetReached(skipped: number, kind: "digest" | "instant") {
   const today = easternDate(new Date());
   await notifyAdmins(
-    `${SITE_NAME} hit its daily email limit`,
-    [
-      `${skipped} ${kind} email${skipped === 1 ? "" : "s"} weren't sent today because alerts reached the daily budget of ${EMAIL_DAILY_BUDGET}.`,
-      "",
-      "Resend's free plan allows 100 emails a day, including sign-in emails.",
-      "To send more, upgrade Resend and raise EMAIL_DAILY_BUDGET in Vercel.",
-      "",
-      `${siteUrl()}/admin/metrics`,
-    ].join("\n"),
+    {
+      subject: `${SITE_NAME} hit its daily email limit`,
+      heading: "Daily email limit reached",
+      blocks: [
+        paragraph(
+          `${skipped} ${kind} email${skipped === 1 ? "" : "s"} weren't sent today because alerts reached the daily budget of ${EMAIL_DAILY_BUDGET}.`,
+        ),
+        group("What to do", [
+          paragraph("Resend's free plan allows 100 emails a day, including sign-in emails."),
+          paragraph("To send more, upgrade Resend and raise EMAIL_DAILY_BUDGET in Vercel."),
+        ]),
+      ],
+      button: { label: "View dashboard", url: `${siteUrl()}/admin/metrics` },
+    },
     `budget-${kind}-${today}`,
   ).catch((e) => console.error("budget warning failed", e));
 }
