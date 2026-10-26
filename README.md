@@ -77,7 +77,7 @@ Migrations must work with the code already in production (add columns/tables; re
 - **Authentication → Emails → SMTP Settings:** custom SMTP via [Resend](https://resend.com).
   - Host `smtp.resend.com`, port `465`, username `resend`, password: a Resend API key.
   - Sender: `no-reply@byebell.com`, name `ByeBell` (domain verified in Resend). Password: a Resend key with sending access for byebell.com.
-- **Authentication → Emails → Templates:** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup** (subject: `Your ByeBell sign-in link`). Custom templates require custom SMTP.
+- **Authentication → Emails → Templates:** paste `supabase/templates/sign-in.html` into both **Magic Link** and **Confirm signup** (subject: `Your ByeBell code: {{ .Token }}`). Custom templates require custom SMTP.
   - **Both** templates matter: brand-new emails get **Confirm signup**, returning ones get **Magic Link**. If Confirm signup keeps Supabase's default (`{{ .ConfirmationURL }}`, no code), first-time links only work in the browser that asked for them, so they fail in Gmail's in-app browser and show "That sign-in link didn't work."
 
 The email has a link (to `/auth/confirm?token_hash=…`, works in any browser) and a sign-in code. The code is for people using the app from their iPhone home screen, which doesn't share sign-ins with Safari. The code entry is controlled by `SIGN_IN_CODE_ENABLED` in `src/app/login/login-form.tsx`; it must stay in sync with the template.

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { CodeInput } from "@/components/code-input";
 import { login, type LoginState } from "./actions";
 
 const inputClass =
@@ -87,20 +88,21 @@ export function LoginForm({ next, initialStep = "email" }: Props) {
           <p>The sign-in email also has a code. Enter it with the email address it was sent to.</p>
           <label className="block space-y-2">
             <span className="block font-bold">Email address</span>
-            <input name="email" type="email" autoComplete="email" required className={inputClass} />
+            <input
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              defaultValue={state.enteredEmail}
+              className={inputClass}
+            />
           </label>
         </>
       )}
       <input type="hidden" name="next" value={next} />
       <label className="block space-y-2">
         <span className="block font-bold">Code from the email</span>
-        <input
-          name="code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          required
-          className={`${inputClass} tracking-widest`}
-        />
+        <CodeInput className={inputClass} submitIntent="code" disabled={pending} autoFocus={!!state.email} />
       </label>
       {state.error && (
         <p role="alert" className="text-danger">
