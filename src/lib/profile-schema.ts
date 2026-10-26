@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// These schemas also run in the browser. Skip Zod's eval-based fast path, which
+// probes with new Function() and trips the Content-Security-Policy.
+z.config({ jitless: true });
+
 export const RADIUS_OPTIONS = [5, 10, 25] as const;
 export const DEFAULT_RADIUS = 10;
 

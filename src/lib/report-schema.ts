@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { CHANNEL_KEYS, SCAM_TYPE_KEYS } from "./scam-types";
 
+// These schemas also run in the browser. Skip Zod's eval-based fast path, which
+// probes with new Function() and trips the Content-Security-Policy.
+z.config({ jitless: true });
+
 export const DESCRIPTION_MIN = 20;
 export const DESCRIPTION_MAX = 2000;
 
