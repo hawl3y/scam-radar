@@ -160,7 +160,8 @@ See [PILOT.md](PILOT.md) for the launch checklist, weekly routine, and success c
 1. Branch from `main`: `git checkout -b <feature>`.
 2. If the change includes a migration, apply it to dev: `supabase db push` (CLI linked to dev).
 3. Push the branch and open a pull request. This runs:
-   - **CI** (GitHub Actions): lint, typecheck, unit tests.
+   - **CI** (GitHub Actions): `npm audit` (fails on high severity), lint, typecheck, unit tests.
+   - **Security scans**: CodeQL (TypeScript and workflow files; results under Security → Code scanning) and gitleaks (secrets anywhere in git history). Also run weekly. Keep GitHub's CodeQL "default setup" off, since this workflow replaces it.
    - **Vercel preview** using the dev database.
 4. Test on the preview. When CI is green, merge the PR.
 5. Merging to `main`:
