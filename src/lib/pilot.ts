@@ -33,14 +33,14 @@ export type WeeklyMetrics = {
 
 /**
  * `value` is the headline number; `progress` is one line for emails (e.g. "4 of 50");
- * `detail` gives the counts behind a percentage.
+ * `detail` is the card's second line (e.g. "4 of 50 so far", "1 of 4 visible alerts").
  */
 export type CriterionResult = {
   label: string;
   value: string;
   target: string;
   progress: string;
-  detail: string | null;
+  detail: string;
   met: boolean | null;
 };
 
@@ -95,13 +95,13 @@ const ratio = (num: number, den: number) => (den > 0 ? num / den : null);
 
 function rateResult(label: string, num: number, den: number, noun: string, target: string, met: (r: number) => boolean): CriterionResult {
   const r = ratio(num, den);
-  const detail = r === null ? null : `${num} of ${den} ${noun}`;
+  const counts = `${num} of ${den} ${noun}`;
   return {
     label,
     value: r === null ? "—" : pct(r),
     target,
-    progress: r === null ? `No data yet · target ${target}` : `${pct(r)} (${detail}) · target ${target}`,
-    detail,
+    progress: r === null ? `No data yet · target ${target}` : `${pct(r)} (${counts}) · target ${target}`,
+    detail: r === null ? `No ${noun} yet` : counts,
     met: r === null ? null : met(r),
   };
 }
@@ -117,7 +117,7 @@ export function evaluatePilot(summary: PilotSummary, weeks: WeeklyMetrics[]): Cr
       value: String(summary.signups_in_market),
       target: `${signupsInMarket}+`,
       progress: `${summary.signups_in_market} of ${signupsInMarket}`,
-      detail: null,
+      detail: `${summary.signups_in_market} of ${signupsInMarket} so far`,
       met: summary.signups_in_market >= signupsInMarket,
     },
     {
@@ -125,7 +125,7 @@ export function evaluatePilot(summary: PilotSummary, weeks: WeeklyMetrics[]): Cr
       value: lastFullWeek ? String(lastFullWeek.reports) : "—",
       target: `${reportsPerWeek}+ by week 4`,
       progress: lastFullWeek ? `${lastFullWeek.reports} of ${reportsPerWeek}` : "No full week yet",
-      detail: null,
+      detail: `This week so far: ${weeks[0]?.reports ?? 0}`,
       met: lastFullWeek ? lastFullWeek.reports >= reportsPerWeek : null,
     },
     rateResult(

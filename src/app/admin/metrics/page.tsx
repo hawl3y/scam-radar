@@ -28,7 +28,6 @@ async function Metrics() {
 
   const { summary, weeks } = await getPilotMetrics(26);
   const criteria = evaluatePilot(summary, weeks);
-  const thisWeekReports = weeks[0]?.reports ?? 0;
 
   return (
     <div className="space-y-10">
@@ -39,8 +38,8 @@ async function Metrics() {
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Targets</h2>
         <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {criteria.map((c, i) => (
-            <TargetCard key={c.label} c={c} note={i === 1 ? `This week so far: ${thisWeekReports}` : c.detail} />
+          {criteria.map((c) => (
+            <TargetCard key={c.label} c={c} />
           ))}
         </ul>
         <p className="text-muted">
@@ -60,7 +59,7 @@ async function Metrics() {
   );
 }
 
-function TargetCard({ c, note }: { c: CriterionResult; note: string | null }) {
+function TargetCard({ c }: { c: CriterionResult }) {
   const status = c.met === null ? "Not enough data" : c.met ? "Met" : "Not met";
   return (
     <li className="flex flex-col gap-2 rounded-xl border-2 border-border bg-surface p-4">
@@ -79,7 +78,7 @@ function TargetCard({ c, note }: { c: CriterionResult; note: string | null }) {
       </h3>
       <div className="mt-auto space-y-1 pt-1">
         <p className="text-muted">Target {c.target}</p>
-        {note && <p className="text-sm text-muted">{note}</p>}
+        <p className="text-sm text-muted">{c.detail}</p>
       </div>
     </li>
   );
