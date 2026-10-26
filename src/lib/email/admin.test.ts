@@ -29,7 +29,7 @@ describe("weeklySummaryEmail", () => {
     expect(lines.slice(start + 1, start + 6)).toEqual([
       "✗ Sign-ups in the test area: 4 of 50",
       "✓ New reports last full week: 6 of 5",
-      "✗ Alerts with an “I got this too”: 25% (1 of 4 alerts) · target 30%+",
+      "✗ Alerts with an “I got this too”: 25% (1 of 4 visible alerts) · target 30%+",
       "– Users who came back in a later week: No data yet · target 40%+",
       "✓ Turned off emails: 0% (0 of 6 people) · target under 10%",
     ]);

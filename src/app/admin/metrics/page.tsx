@@ -38,7 +38,7 @@ async function Metrics() {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Targets</h2>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {criteria.map((c, i) => (
             <TargetCard key={c.label} c={c} note={i === 1 ? `This week so far: ${thisWeekReports}` : c.detail} />
           ))}
@@ -50,7 +50,10 @@ async function Metrics() {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">By week</h2>
-        <p className="text-muted">Weeks since launch, newest first. Weeks start Monday (Eastern).</p>
+        <p className="text-muted">
+          Weeks since launch, newest first. Weeks start Monday (Eastern). &ldquo;Got this too&rdquo; counts every press,
+          including on alerts later hidden or removed; the target card counts only alerts that are still visible.
+        </p>
         <WeeklyTable weeks={sinceLaunch(weeks)} />
       </div>
     </div>
@@ -61,21 +64,23 @@ function TargetCard({ c, note }: { c: CriterionResult; note: string | null }) {
   const status = c.met === null ? "Not enough data" : c.met ? "Met" : "Not met";
   return (
     <li className="flex flex-col gap-2 rounded-xl border-2 border-border bg-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="font-bold leading-snug">{c.label}</h3>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-3xl font-bold tabular-nums">{c.value}</p>
         <span
-          className={`shrink-0 text-xl font-bold ${c.met === null ? "text-muted" : c.met ? "text-accent" : "text-danger"}`}
+          className={`text-2xl font-bold ${c.met === null ? "text-muted" : c.met ? "text-accent" : "text-danger"}`}
           aria-hidden
         >
           {criterionMark(c.met)}
         </span>
       </div>
-      <p className="text-3xl font-bold tabular-nums">{c.value}</p>
-      <p className="text-muted">
-        Target {c.target}
+      <h3 className="font-bold leading-snug">
+        {c.label}
         <span className="sr-only">. {status}.</span>
-      </p>
-      {note && <p className="text-sm text-muted">{note}</p>}
+      </h3>
+      <div className="mt-auto space-y-1 pt-1">
+        <p className="text-muted">Target {c.target}</p>
+        {note && <p className="text-sm text-muted">{note}</p>}
+      </div>
     </li>
   );
 }

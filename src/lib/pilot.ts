@@ -132,7 +132,7 @@ export function evaluatePilot(summary: PilotSummary, weeks: WeeklyMetrics[]): Cr
       "Alerts with an “I got this too”",
       summary.clusters_corroborated,
       summary.clusters_with_reports,
-      "alerts",
+      "visible alerts",
       `${pct(corroborationRate)}+`,
       (r) => r >= corroborationRate,
     ),
