@@ -17,6 +17,8 @@ export const RATE_LIMITS = {
   // Supabase's own auth limits are per IP, and every request reaches it from
   // our servers, so sign-in needs its own per-visitor and per-address limits.
   // Per address: stops email bombing and code guessing against one account.
+  // Each page view can send a few reports; this only stops floods.
+  cspReport: { name: "csp-report", limit: 100, windowSeconds: HOUR },
   signInEmailIp: { name: "sign-in-email-ip", limit: 10, windowSeconds: HOUR },
   signInEmailAddress: { name: "sign-in-email-address", limit: 5, windowSeconds: HOUR },
   signInCodeIp: { name: "sign-in-code-ip", limit: 30, windowSeconds: HOUR },

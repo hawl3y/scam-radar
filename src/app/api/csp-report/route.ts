@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { allowRequest } from "@/lib/rate-limit";
+import { RATE_LIMITS } from "@/lib/rate-limits";
 
-const MAX_BODY = 16_000;
+const MAX_BODY = 16 * 1024;
 const MAX_REPORTS = 10;
 
 type Violation = { page: string; blocked: string; directive: string; source: string };
@@ -41,9 +43,30 @@ function parse(body: unknown): Violation[] {
   return legacy && typeof legacy === "object" ? [fromBody(legacy as Record<string, unknown>, true)] : [];
 }
 
+// Stops reading once past the cap; Content-Length can be missing or wrong.
+async function readCapped(request: NextRequest): Promise<string | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return "";
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_BODY) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 export async function POST(request: NextRequest) {
-  const text = await request.text();
-  if (text.length > MAX_BODY) return new NextResponse(null, { status: 413 });
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY) return new NextResponse(null, { status: 413 });
+  if (!(await allowRequest(RATE_LIMITS.cspReport))) return new NextResponse(null, { status: 429 });
+  const text = await readCapped(request);
+  if (text === null) return new NextResponse(null, { status: 413 });
   let body: unknown;
   try {
     body = JSON.parse(text);
