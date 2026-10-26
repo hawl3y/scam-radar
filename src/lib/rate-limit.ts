@@ -20,7 +20,15 @@ async function clientIp(): Promise<string> {
  * given, otherwise by client IP. Raw ids and IPs are never stored.
  */
 export async function allowRequest(limit: RateLimit, userId?: string): Promise<boolean> {
-  const subject = userId ? `user:${userId}` : `ip:${await clientIp()}`;
+  return hit(limit, userId ? `user:${userId}` : `ip:${await clientIp()}`);
+}
+
+/** Same, keyed by an email address (before anyone is signed in). */
+export async function allowRequestForEmail(limit: RateLimit, email: string): Promise<boolean> {
+  return hit(limit, `email:${email.toLowerCase()}`);
+}
+
+async function hit(limit: RateLimit, subject: string): Promise<boolean> {
   const { data, error } = await createAdminClient().rpc("hit_rate_limit", {
     p_key: `${limit.name}:${hashKey(subject)}`,
     p_limit: limit.limit,
