@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabaseEnv } from "./env";
+import { AUTH_COOKIE_OPTIONS, supabaseEnv } from "./env";
 
 // /report is public: sign-in happens at Post, inside the flow.
 const PROTECTED_PATHS = ["/settings", "/admin"];
@@ -16,6 +16,7 @@ export async function updateSession(request: NextRequest) {
   const { url, key } = supabaseEnv();
 
   const supabase = createServerClient(url, key, {
+    cookieOptions: AUTH_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return request.cookies.getAll();

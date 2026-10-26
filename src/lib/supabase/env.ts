@@ -8,3 +8,7 @@ export function supabaseEnv() {
   }
   return { url, key };
 }
+
+// Only the server reads the auth cookies (the browser never talks to Supabase),
+// so scripts on the page don't need access to them.
+export const AUTH_COOKIE_OPTIONS = { httpOnly: true, secure: true, sameSite: "lax", path: "/" } as const;
