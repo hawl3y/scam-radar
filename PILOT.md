@@ -29,6 +29,10 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 - [ ] **Supabase inactivity pauses:** free-plan projects pause after about a week of low activity. Prod should stay active (the daily cron jobs query it), but the **dev** project can pause between work sessions, and previews then fail until it's restored. Restore from the Supabase dashboard, or upgrade if pauses become a problem.
 - [ ] **FTC data coverage:** state trends build up from the first ingest (no backfill), so most states show "N days of data so far" for the first week and comparisons after two. The API's burst throttle (~100 requests per run from Vercel) is why ingest runs every 15 minutes on weekday afternoons.
 - [ ] **GitHub pauses scheduled workflows** in public repos after 60 days without repository activity (it emails a warning). If that happens, re-enable **Ingest FTC data** under Actions; the Vercel cron keeps NY/NJ covered meanwhile.
+- [ ] **Enforce the CSP:** after a few days of clean `csp-violation` logs (Vercel → Logs), rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` in `next.config.ts`. See README → Deploys.
+- [ ] **Low security findings:** decide on L1–L16 in `SECURITY_REVIEW.md`. L1 (CSP, now report-only), L2 (HttpOnly cookies), and L15 (Dependabot) are done.
+- [ ] **Dependabot:** confirm its first weekly runs open PRs and that CI and Security scans pass on them.
+- [ ] **Supabase email templates:** whenever `supabase/templates/sign-in.html` or the subject changes, re-paste both into **Magic Link** and **Confirm signup** in dev and prod (README → Auth settings).
 - [ ] **Resend free-tier limit:** 100 emails a day including sign-in emails. Alerts stop at `EMAIL_DAILY_BUDGET` (90) and you get a "daily email limit" email. If that happens, or digest users pass ~80, upgrade Resend and raise `EMAIL_DAILY_BUDGET` in Vercel.
 
 ## Plan limits
