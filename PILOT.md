@@ -50,7 +50,7 @@ Status: Phases 0–6 are merged and live. Work through the launch checklist and 
 
 ## Success criteria (weeks 4–8)
 
-Shown on `/admin/metrics` and in the weekly email. Defined in `src/lib/pilot.ts`.
+Shown on `/admin/metrics` and in the weekly email. Defined in `src/lib/pilot.ts`, along with the launch week (`PILOT_LAUNCH_WEEK`; the metrics table starts there). Every email shares one layout, `src/lib/email/layout.ts`; `supabase/templates/sign-in.html` copies its look, so re-paste it into Supabase (dev and prod) after changing it.
 
 | Measure | Target |
 |---|---|
