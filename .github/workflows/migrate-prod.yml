@@ -9,6 +9,9 @@ on:
     paths: ["supabase/migrations/**"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: migrate-prod
   cancel-in-progress: false
@@ -16,12 +19,16 @@ concurrency:
 jobs:
   migrate:
     runs-on: ubuntu-latest
-    env:
-      # Session pooler connection string (IPv4; runners have no IPv6). See README.
-      SUPABASE_DB_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Third-party action: pinned to a commit, and the database secret is only
+      # given to the step below.
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
         with:
           version: 2.122.0
       - run: supabase db push --db-url "$SUPABASE_DB_URL" --yes
+        env:
+          # Session pooler connection string (IPv4; runners have no IPv6). See README.
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}

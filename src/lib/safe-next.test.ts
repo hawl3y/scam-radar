@@ -8,7 +8,7 @@ describe("safeNext", () => {
   });
 
   it("falls back to / for missing or off-site values", () => {
-    for (const bad of [null, undefined, "", "settings", "https://evil.test", "//evil.test", "/\\evil.test"]) {
+    for (const bad of [null, undefined, "", "settings", "https://evil.test", "//evil.test", "/\\evil.test", "/\t/evil.test", "/\n/evil.test", "/\r\n/evil.test", "/\\/evil.test"]) {
       expect(safeNext(bad)).toBe("/");
     }
   });
